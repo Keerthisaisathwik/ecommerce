@@ -24,7 +24,6 @@ public class UserDetails {
     @NonNull
     private String firstName;
 
-    @NonNull
     private String lastName;
 
     private String phoneNumber;

@@ -1,5 +1,6 @@
 package com.project.ecommerce.entity;
 
+import com.project.ecommerce.enums.AuthProviderType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -23,8 +24,13 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String username;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
+
+    private String providerId;
+
+    @Enumerated(EnumType.STRING)
+    private AuthProviderType providerType;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
