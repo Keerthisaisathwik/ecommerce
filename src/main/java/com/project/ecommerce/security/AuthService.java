@@ -1,5 +1,7 @@
 package com.project.ecommerce.security;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.ecommerce.config.AppCofig;
 import com.project.ecommerce.dto.LoginRequestDto;
 import com.project.ecommerce.dto.LoginResponseDto;
@@ -11,6 +13,7 @@ import com.project.ecommerce.exception.GenericException;
 import com.project.ecommerce.repository.UserDetailsRepository;
 import com.project.ecommerce.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -22,6 +25,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +45,12 @@ public class AuthService {
     private final JwtHelper jwtHelper;
 
     private final AppCofig appCofig;
+
+    private final RedisTemplate<String, String> redisTemplate;
+
+    private final ObjectMapper objectMapper;
+
+    private static final int TTL_SECONDS = 300; // 5 min
 
     public LoginResponseDto login(LoginRequestDto loginRequestDto) {
         Authentication authentication =
@@ -82,6 +93,36 @@ public class AuthService {
                 .build()
         );
 
+    }
+
+    // Generate 6-digit numeric code
+    public String generateCode() {
+        SecureRandom random = new SecureRandom();
+        int number = random.nextInt(1_000_000);
+        return String.format("%06d", number);
+    }
+
+    // Store auth code and loginResponse in Redis
+    public String storeLoginResponse(LoginResponseDto loginResponse) throws JsonProcessingException {
+        String code = generateCode();
+        String key = "authcode:" + code;
+
+        // Serialize loginResponse to JSON and store in Redis
+        String value = objectMapper.writeValueAsString(loginResponse);
+        redisTemplate.opsForValue().set(key, value, Duration.ofSeconds(TTL_SECONDS));
+        return code;
+    }
+
+    // Verify auth code and return LoginResponseDto
+    public LoginResponseDto consumeLoginResponse(String code) throws JsonProcessingException {
+        String key = "authcode:" + code;
+        String value = redisTemplate.opsForValue().get(key);
+        if (value == null) {
+            return null; // invalid or expired
+        }
+        // Delete after retrieving (one-time use)
+        redisTemplate.delete(key);
+        return objectMapper.readValue(value, LoginResponseDto.class);
     }
 
     @Transactional
