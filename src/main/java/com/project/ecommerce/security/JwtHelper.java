@@ -34,7 +34,7 @@ public class JwtHelper {
 
     public String getUsernameByToken(String token) {
         Claims claims = Jwts.parserBuilder()
-                .setSigningKey(jwtSecretKey)
+                .setSigningKey(getSecretKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

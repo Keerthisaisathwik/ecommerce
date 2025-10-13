@@ -9,6 +9,7 @@ import com.project.ecommerce.dto.SignUpRequestDto;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.entity.UserDetails;
 import com.project.ecommerce.enums.AuthProviderType;
+import com.project.ecommerce.enums.UserRole;
 import com.project.ecommerce.exception.GenericException;
 import com.project.ecommerce.repository.UserDetailsRepository;
 import com.project.ecommerce.repository.UserRepository;
@@ -58,15 +59,7 @@ public class AuthService {
         User user = (User) authentication.getPrincipal();
         String token = jwtHelper.generateAccessToken(user);
         UserDetails userDetails = userDetailsRepository.findByUser(user).orElseThrow();
-//        List<String> roles =
-//                user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
-        List<String> roles = new ArrayList<>(
-                user.getAuthorities().stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .toList()
-        );
-        roles.add("CUSTOMER");
-        return new LoginResponseDto(token, user.getId(), roles.get(0),
+        return new LoginResponseDto(token, user.getId(), user.getRole(),
                 userDetails.getFirstName());
     }
 
@@ -78,6 +71,7 @@ public class AuthService {
         user = userRepository.save(User.builder()
                 .username(signUpRequestDto.getUsername())
                 .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
+                .role(UserRole.CUSTOMER)
                 .providerType(AuthProviderType.EMAIL)
                 .build()
         );
@@ -153,13 +147,7 @@ public class AuthService {
             throw new IllegalArgumentException("User already exists with that email");
         }
         String token = jwtHelper.generateAccessToken(user);
-        List<String> roles = new ArrayList<>(
-                user.getAuthorities().stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .toList()
-        );
-        roles.add("CUSTOMER");
-        LoginResponseDto loginResponseDto = new LoginResponseDto(token, user.getId(), roles.get(0),
+        LoginResponseDto loginResponseDto = new LoginResponseDto(token, user.getId(), user.getRole(),
                 name != null ? name : email.substring(0, email.length() > 15 ? email.length() - 10 :
                         email.length()));
         return ResponseEntity.ok(loginResponseDto);
