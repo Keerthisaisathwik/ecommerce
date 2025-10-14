@@ -9,7 +9,7 @@ import lombok.*;
 @Builder
 @ToString
 public class APISuccessResponse<T> {
-    private Boolean status=true;
-    private String message=null;
+    private final Boolean status=true;
+    private final String message=null;
     private T data;
 }
