@@ -1,5 +1,6 @@
 package com.project.ecommerce.dto;
 
+import com.project.ecommerce.enums.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,6 @@ import java.util.List;
 public class LoginResponseDto {
     String jwt;
     Long userId;
-    String role;
+    UserRole role;
     String name;
 }
