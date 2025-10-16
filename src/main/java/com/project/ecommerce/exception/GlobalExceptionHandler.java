@@ -13,13 +13,15 @@ import java.io.IOException;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<APIErrorResponse> handleRegularException(Exception ex) {
-        APIErrorResponse apiError = new APIErrorResponse("An unexpected error occured: " + ex.getMessage());
+        APIErrorResponse apiError =
+                new APIErrorResponse("An unexpected error occured: " + ex.getMessage());
         return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(IOException.class)
     public ResponseEntity<APIErrorResponse> handleIOException(IOException ex) {
-        APIErrorResponse apiError = new APIErrorResponse("An unexpected error occured: " + ex.getMessage());
+        APIErrorResponse apiError =
+                new APIErrorResponse("An unexpected error occured: " + ex.getMessage());
         return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -33,5 +35,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<APIErrorResponse> handleGenericException(GenericException ex) {
         APIErrorResponse apiError = new APIErrorResponse(ex.getMessage());
         return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(EmailVerificationException.class)
+    public ResponseEntity<APIErrorResponse> handleEmailVerificationException(EmailVerificationException ex) {
+        APIErrorResponse apiError = new APIErrorResponse(ex.getMessage());
+        return new ResponseEntity<>(apiError, HttpStatus.FORBIDDEN);
     }
 }
