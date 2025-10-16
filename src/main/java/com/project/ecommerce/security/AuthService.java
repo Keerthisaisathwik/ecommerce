@@ -10,11 +10,14 @@ import com.project.ecommerce.entity.User;
 import com.project.ecommerce.entity.UserDetails;
 import com.project.ecommerce.enums.AuthProviderType;
 import com.project.ecommerce.enums.UserRole;
+import com.project.ecommerce.exception.EmailVerificationException;
 import com.project.ecommerce.exception.GenericException;
 import com.project.ecommerce.repository.UserDetailsRepository;
 import com.project.ecommerce.repository.UserRepository;
+import com.project.ecommerce.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -53,29 +56,38 @@ public class AuthService {
 
     private static final int TTL_SECONDS = 300; // 5 min
 
-    public LoginResponseDto login(LoginRequestDto loginRequestDto) {
+    private final EmailService emailService;
+
+    public LoginResponseDto login(LoginRequestDto loginRequestDto) throws EmailVerificationException {
         Authentication authentication =
                 authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestDto.getUsername(), loginRequestDto.getPassword()));
         User user = (User) authentication.getPrincipal();
         String token = jwtHelper.generateAccessToken(user);
         UserDetails userDetails = userDetailsRepository.findByUser(user).orElseThrow();
+        if (!user.getIsVerified()) {
+            user.setVerificationToken(generateCode());
+            userRepository.save(user);
+            emailService.sendVerificationEmail(userDetails.getEmail(), user.getVerificationToken());
+            throw new EmailVerificationException("Verification email resent. Please check your " +
+                    "inbox.");
+        }
         return new LoginResponseDto(token, user.getId(), user.getRole(),
                 userDetails.getFirstName());
     }
 
     public void signup(SignUpRequestDto signUpRequestDto) throws GenericException {
-        User user = userRepository.findByUsername(signUpRequestDto.getUsername()).orElse(null);
+        User user = userRepository.findByUsername(signUpRequestDto.getEmail()).orElse(null);
         if (user != null) {
-            throw new GenericException("Username already exists");
+            throw new GenericException("Email already exists");
         }
         user = userRepository.save(User.builder()
-                .username(signUpRequestDto.getUsername())
-                .password(passwordEncoder.encode(signUpRequestDto.getPassword()))
+                .username(signUpRequestDto.getEmail())
+                .password(null)
                 .role(UserRole.CUSTOMER)
                 .providerType(AuthProviderType.EMAIL)
                 .build()
         );
-        userDetailsRepository.save(UserDetails.builder()
+        UserDetails userDetails = userDetailsRepository.save(UserDetails.builder()
                 .title(signUpRequestDto.getTitle())
                 .user(user)
                 .firstName(signUpRequestDto.getFirstName())
@@ -86,7 +98,9 @@ public class AuthService {
                 .pincode(signUpRequestDto.getPincode())
                 .build()
         );
-
+        user.setVerificationToken(jwtHelper.generateEmailToken(signUpRequestDto.getEmail()));
+        userRepository.save(user);
+        emailService.sendVerificationEmail(userDetails.getEmail(), user.getVerificationToken());
     }
 
     // Generate 6-digit numeric code
@@ -147,7 +161,8 @@ public class AuthService {
             throw new IllegalArgumentException("User already exists with that email");
         }
         String token = jwtHelper.generateAccessToken(user);
-        LoginResponseDto loginResponseDto = new LoginResponseDto(token, user.getId(), user.getRole(),
+        LoginResponseDto loginResponseDto = new LoginResponseDto(token, user.getId(),
+                user.getRole(),
                 name != null ? name : email.substring(0, email.length() > 15 ? email.length() - 10 :
                         email.length()));
         return ResponseEntity.ok(loginResponseDto);

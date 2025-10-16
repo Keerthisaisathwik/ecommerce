@@ -3,6 +3,7 @@ package com.project.ecommerce.security;
 import com.project.ecommerce.constants.Constants;
 import com.project.ecommerce.entity.User;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +31,43 @@ public class JwtHelper {
                 .setExpiration(new Date(System.currentTimeMillis() + Constants.JWT_TOKEN_VALIDITY * 60 * 1000))
                 .signWith(getSecretKey())
                 .compact();
+    }
+
+    public String generateEmailToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + Constants.JWT_EMAIL_TOKEN_VALIDITY * 60 * 1000))
+                .signWith(getSecretKey())
+                .compact();
+    }
+
+    public boolean validateToken(String token) {
+        return !isTokenExpired(token);
+    }
+
+    public String extractEmail(String token) {
+        JwtParser jwtParser = Jwts.parserBuilder()
+                .setSigningKey(getSecretKey())
+                .build();
+
+        return jwtParser.parseClaimsJws(token)
+                .getBody()
+                .getSubject();
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    private Date extractExpiration(String token) {
+        JwtParser jwtParser = Jwts.parserBuilder()
+                .setSigningKey(getSecretKey())
+                .build();
+
+        return jwtParser.parseClaimsJws(token)
+                .getBody()
+                .getExpiration();
     }
 
     public String getUsernameByToken(String token) {

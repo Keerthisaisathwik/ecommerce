@@ -36,6 +36,13 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
+    private String verificationToken;
+
+    private Boolean isVerified = false;
+
+    @Column(name = "reset_token")
+    private String resetToken;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
