@@ -61,7 +61,7 @@ public class UserController {
         return new ResponseEntity<>(APISuccessResponse.<List<ResponseGetCartItems>>builder().data(list).build(), HttpStatus.OK);
     }
 
-    @PostMapping("/add-product")
+    @PostMapping("/cart")
     public ResponseEntity<APISuccessResponse<?>> addToCart(@RequestBody CartItemDto cartItemDto, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException {
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
@@ -69,7 +69,7 @@ public class UserController {
         return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
     }
 
-    @DeleteMapping("/remove-product/{cart-item-id}")
+    @DeleteMapping("/cart/{cart-item-id}")
     public ResponseEntity<APISuccessResponse<?>> removeItemFromCart(@PathVariable("cart-item-id") Long itemId, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
@@ -77,7 +77,7 @@ public class UserController {
         return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
     }
 
-    @PatchMapping("/update-quantity")
+    @PatchMapping("/cart")
     public ResponseEntity<APISuccessResponse<?>> updateQuantity(@RequestBody UpdateCartItemQuantityDto updateCartItemQuantityDto, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);

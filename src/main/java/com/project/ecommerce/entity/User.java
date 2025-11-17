@@ -44,6 +44,7 @@ public class User implements UserDetails {
     private String resetToken;
 
     @OneToOne
+    @JoinColumn(name = "cart_id")
     private Cart cart;
 
     @Override
