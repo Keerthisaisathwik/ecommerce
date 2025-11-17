@@ -9,6 +9,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import jakarta.mail.internet.MimeMessage;
 
+import java.util.List;
+
 @Service
 public class EmailService {
     @Autowired
@@ -16,6 +18,13 @@ public class EmailService {
 
     @Value("${spring.mail.username}")
     private String from;
+
+    @Value("#{'${cors.allowed.origins}'.split(',')}")
+    private List<String> allowedOrigins;
+
+    public String getFrontendUrl() {
+        return allowedOrigins.get(0);   // first origin → frontend URL
+    }
 
     public void sendVerificationEmail(String email, String verificationToken) {
         String subject = "Email Verification";
@@ -35,7 +44,7 @@ public class EmailService {
 
     private void sendEmail(String email, String token, String subject, String path, String message) {
         try {
-            String actionUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+            String actionUrl = ServletUriComponentsBuilder.fromUriString(getFrontendUrl())
                     .path(path)
                     .queryParam("token", token)
                     .toUriString();

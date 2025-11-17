@@ -167,4 +167,14 @@ public class AuthService {
                         email.length()));
         return ResponseEntity.ok(loginResponseDto);
     }
+
+    public void accountRecovery(String email) throws EmailVerificationException{
+        UserDetails userDetails = userDetailsRepository.findByEmail(email).orElse(null);
+        if(userDetails == null)
+            throw new EmailVerificationException("Email does not exist" + email);
+        User user = userDetails.getUser();
+        user.setVerificationToken(jwtHelper.generateEmailToken(email));
+        userRepository.save(user);
+        emailService.sendVerificationEmail(userDetails.getEmail(), user.getVerificationToken());
+    }
 }
