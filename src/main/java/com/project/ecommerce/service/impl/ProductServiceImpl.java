@@ -9,6 +9,8 @@ import com.project.ecommerce.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
@@ -33,5 +35,10 @@ public class ProductServiceImpl implements ProductService {
                 .stockQuantity(newProduct.getStockQuantity())
                 .build();
         productVariantRepository.save(productVariant);
+    }
+
+    @Override
+    public Optional<Product> getProductById(Long id) {
+        return productRepository.findById(id);
     }
 }

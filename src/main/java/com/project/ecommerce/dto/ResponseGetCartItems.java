@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ResponseCartItemDto {
+public class ResponseGetCartItems {
 
     private long id;
 
@@ -18,4 +18,14 @@ public class ResponseCartItemDto {
     private long variantId;
 
     private int quantity;
+
+    private String name;
+
+    private String description;
+
+    private Double price;
+
+    private String imageUrl;
+
+    private boolean isAvailable;
 }

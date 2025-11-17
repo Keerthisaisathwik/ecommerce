@@ -2,12 +2,16 @@ package com.project.ecommerce.controller;
 
 import com.project.ecommerce.dto.APISuccessResponse;
 import com.project.ecommerce.dto.CartItemDto;
-import com.project.ecommerce.dto.ResponseCartItemDto;
+import com.project.ecommerce.dto.ResponseGetCartItems;
 import com.project.ecommerce.dto.UpdateCartItemQuantityDto;
 import com.project.ecommerce.entity.CartItem;
+import com.project.ecommerce.entity.Product;
+import com.project.ecommerce.entity.ProductVariant;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.exception.GenericException;
+import com.project.ecommerce.repository.ProductRepository;
 import com.project.ecommerce.service.CartService;
+import com.project.ecommerce.service.ProductService;
 import com.project.ecommerce.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -29,21 +33,32 @@ public class UserController {
 
     private final CartService cartService;
 
+    private final ProductService productService;
+
+    private final ProductRepository productRepository;
+
     @GetMapping("/cart")
-    public ResponseEntity<APISuccessResponse<List<ResponseCartItemDto>>> getCartItems(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
+    public ResponseEntity<APISuccessResponse<List<ResponseGetCartItems>>> getCartItems(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
-        List<ResponseCartItemDto> list = new ArrayList<>();
+        List<ResponseGetCartItems> list = new ArrayList<>();
         for(CartItem cartItem : user.getCart().getItems()){
-            ResponseCartItemDto cartItemDto = ResponseCartItemDto.builder()
+            Product product = productService.getProductById(cartItem.getProductId()).orElse(null);
+            ProductVariant productVariant = product.getProductVariants().stream().filter(variant -> variant.getId() == cartItem.getVariantId()).findFirst().get();
+            ResponseGetCartItems cartItemDto = ResponseGetCartItems.builder()
                     .id(cartItem.getId())
                     .productId(cartItem.getProductId())
                     .variantId(cartItem.getVariantId())
                     .quantity(cartItem.getQuantity())
+                    .name(product.getName())
+                    .description(product.getDescription())
+                    .price(productVariant.getPrice())
+                    .isAvailable(productVariant.getIsAvailable())
+                    .imageUrl(productVariant.getImageUrl())
                     .build();
             list.add(cartItemDto);
         }
-        return new ResponseEntity<>(APISuccessResponse.<List<ResponseCartItemDto>>builder().data(list).build(), HttpStatus.OK);
+        return new ResponseEntity<>(APISuccessResponse.<List<ResponseGetCartItems>>builder().data(list).build(), HttpStatus.OK);
     }
 
     @PostMapping("/add-product")
