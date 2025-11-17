@@ -1,8 +1,10 @@
 package com.project.ecommerce.controller;
 
 import com.project.ecommerce.dto.APISuccessResponse;
-import com.project.ecommerce.dto.ProductsBasedOnCategoryDTO;
+import com.project.ecommerce.dto.ProductDto;
+import com.project.ecommerce.dto.ProductVariantDto;
 import com.project.ecommerce.entity.Product;
+import com.project.ecommerce.entity.ProductVariant;
 import com.project.ecommerce.enums.CategoryType;
 import com.project.ecommerce.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -24,9 +27,33 @@ public class StoreController {
     private final ProductRepository productRepository;
 
     @GetMapping("/product/{product_id}")
-    public ResponseEntity<APISuccessResponse<Product>> loginByAuthCode(@PathVariable("product_id") Long product_id) {
+    public ResponseEntity<APISuccessResponse<ProductDto>> loginByAuthCode(@PathVariable("product_id") Long product_id) {
         Product product = productRepository.findById(product_id).orElse(null);
-        return new ResponseEntity<>(APISuccessResponse.<Product>builder().data(product).build(), HttpStatus.OK);
+        List<ProductVariantDto> list = new ArrayList<>();
+        for(ProductVariant productVariant : product.getProductVariants()){
+            ProductVariantDto productVariantDto = ProductVariantDto.builder()
+                    .price(productVariant.getPrice())
+                    .imageUrl(productVariant.getImageUrl())
+                    .stockQuantity(productVariant.getStockQuantity())
+                    .isAvailable(productVariant.getIsAvailable())
+                    .createdAt(productVariant.getCreatedAt())
+                    .updatedAt(productVariant.getUpdatedAt())
+                    .build();
+            list.add(productVariantDto);
+        }
+        ProductDto productDto = ProductDto.builder()
+                .id(product.getId())
+                .brand(product.getBrand())
+                .averageRating(product.getAverageRating())
+                .category(product.getCategory())
+                .productVariants(list)
+                .description(product.getDescription())
+                .createdAt(product.getCreatedAt())
+                .name(product.getName())
+                .totalReviews(product.getTotalReviews())
+                .updatedAt(product.getUpdatedAt())
+                .build();
+        return new ResponseEntity<>(APISuccessResponse.<ProductDto>builder().data(productDto).build(), HttpStatus.OK);
     }
 
     @GetMapping("/category")

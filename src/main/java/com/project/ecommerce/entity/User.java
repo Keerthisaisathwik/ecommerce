@@ -43,18 +43,11 @@ public class User implements UserDetails {
     @Column(name = "reset_token")
     private String resetToken;
 
+    @OneToOne
+    private Cart cart;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
     }
-
-//    @Override
-//    public String getPassword() {
-//        return "";
-//    }
-//
-//    @Override
-//    public String getUsername() {
-//        return "";
-//    }
 }

@@ -6,12 +6,14 @@ import com.project.ecommerce.config.AppCofig;
 import com.project.ecommerce.dto.LoginRequestDto;
 import com.project.ecommerce.dto.LoginResponseDto;
 import com.project.ecommerce.dto.SignUpRequestDto;
+import com.project.ecommerce.entity.Cart;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.entity.UserDetails;
 import com.project.ecommerce.enums.AuthProviderType;
 import com.project.ecommerce.enums.UserRole;
 import com.project.ecommerce.exception.EmailVerificationException;
 import com.project.ecommerce.exception.GenericException;
+import com.project.ecommerce.repository.CartRepository;
 import com.project.ecommerce.repository.UserDetailsRepository;
 import com.project.ecommerce.repository.UserRepository;
 import com.project.ecommerce.service.EmailService;
@@ -58,6 +60,8 @@ public class AuthService {
 
     private final EmailService emailService;
 
+    private final CartRepository cartRepository;
+
     public LoginResponseDto login(LoginRequestDto loginRequestDto) throws EmailVerificationException {
         Authentication authentication =
                 authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestDto.getUsername(), loginRequestDto.getPassword()));
@@ -80,11 +84,14 @@ public class AuthService {
         if (user != null) {
             throw new GenericException("Email already exists");
         }
+        Cart cart = new Cart();
+        cartRepository.save(cart);
         user = userRepository.save(User.builder()
                 .username(signUpRequestDto.getEmail())
                 .password(null)
                 .role(UserRole.CUSTOMER)
                 .providerType(AuthProviderType.EMAIL)
+                .cart(cart)
                 .build()
         );
         UserDetails userDetails = userDetailsRepository.save(UserDetails.builder()

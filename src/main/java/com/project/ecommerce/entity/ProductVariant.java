@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Getter
@@ -13,34 +12,28 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Product {
+public class ProductVariant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    private CategoryType category;
-
-    private String name;
-
-    private String description;
-
-    private String brand;
-
-    @Builder.Default
-    private Double averageRating = 0.0;
-
-    @Builder.Default
-    private Integer totalReviews = 0;
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
 
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "product")
-    @OrderBy("isAvailable DESC")
-    private List<ProductVariant> productVariants;
+    private Double price;
+
+    private String imageUrl;
+
+    private Integer stockQuantity;
+
+    @Builder.Default
+    private Boolean isAvailable = true;
 
     // Automatically set dates before persisting/updating
     @PrePersist
@@ -48,8 +41,7 @@ public class Product {
         LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
-        if (averageRating == null) this.averageRating = 0.0;
-        if (totalReviews == null) this.totalReviews = 0;
+        if (isAvailable == null) this.isAvailable = true;
     }
 
     @PreUpdate
