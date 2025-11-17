@@ -1,8 +1,8 @@
 package com.project.ecommerce.service;
 
-import com.project.ecommerce.dto.ProductDto;
+import com.project.ecommerce.dto.SaveProductDto;
 
 public interface ProductService {
 
-    void saveProduct(ProductDto newProduct);
+    void saveProduct(SaveProductDto newProduct);
 }

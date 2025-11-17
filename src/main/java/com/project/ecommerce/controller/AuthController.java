@@ -89,4 +89,11 @@ public class AuthController {
 
         return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
     }
+
+    @GetMapping("/account-recovery/{email}")
+    public ResponseEntity<APISuccessResponse> accountRecovery(@PathVariable("email") String email) throws EmailVerificationException,
+            GenericException{
+        authService.accountRecovery(email);
+        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
+    }
 }
