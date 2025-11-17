@@ -1,7 +1,7 @@
 package com.project.ecommerce.controller;
 
 import com.project.ecommerce.dto.APISuccessResponse;
-import com.project.ecommerce.dto.ProductDto;
+import com.project.ecommerce.dto.SaveProductDto;
 import com.project.ecommerce.repository.ProductRepository;
 import com.project.ecommerce.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +18,8 @@ public class AdminController {
 
     private final ProductService productService;
 
-    @PostMapping("/add-product")
-    public ResponseEntity<APISuccessResponse<?>> loginByAuthCode(@RequestBody ProductDto newProduct) {
+    @PostMapping("/create-product")
+    public ResponseEntity<APISuccessResponse<?>> loginByAuthCode(@RequestBody SaveProductDto newProduct) {
         productService.saveProduct(newProduct);
         return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
     }

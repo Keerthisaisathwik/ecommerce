@@ -1,13 +1,21 @@
 package com.project.ecommerce.dto;
 
+import com.project.ecommerce.entity.ProductVariant;
 import com.project.ecommerce.enums.CategoryType;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import lombok.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class ProductDto {
+
+    private Long id;
 
     private CategoryType category;
 
@@ -17,11 +25,13 @@ public class ProductDto {
 
     private String brand;
 
-    private Double price;
+    private Double averageRating;
 
-    private String imageUrl;
+    private Integer totalReviews;
 
-    private Integer stockQuantity;
+    private LocalDateTime createdAt;
 
-    private Boolean isAvailable;
+    private LocalDateTime updatedAt;
+
+    private List<ProductVariantDto> productVariants;
 }
