@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,7 +27,7 @@ public class ResponseGetCartItems {
 
     private Double price;
 
-    private String imageUrl;
+    private List<String> imageUrls;
 
     private boolean isAvailable;
 }

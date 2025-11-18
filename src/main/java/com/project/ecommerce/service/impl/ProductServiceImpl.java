@@ -31,7 +31,7 @@ public class ProductServiceImpl implements ProductService {
         ProductVariant productVariant = ProductVariant.builder()
                 .product(product)
                 .price(newProduct.getPrice())
-                .imageUrl(newProduct.getImageUrl())
+                .imageUrls(newProduct.getImageUrls())
                 .stockQuantity(newProduct.getStockQuantity())
                 .build();
         productVariantRepository.save(productVariant);

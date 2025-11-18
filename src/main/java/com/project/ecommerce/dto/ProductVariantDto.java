@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -21,7 +22,7 @@ public class ProductVariantDto {
 
     private Double price;
 
-    private String imageUrl;
+    private List<String> imageUrls;
 
     private Integer stockQuantity;
 

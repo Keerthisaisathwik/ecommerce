@@ -54,7 +54,7 @@ public class UserController {
                     .description(product.getDescription())
                     .price(productVariant.getPrice())
                     .isAvailable(productVariant.getIsAvailable())
-                    .imageUrl(productVariant.getImageUrl())
+                    .imageUrls(productVariant.getImageUrls())
                     .build();
             list.add(cartItemDto);
         }

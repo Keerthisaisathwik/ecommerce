@@ -35,7 +35,7 @@ public class StoreController {
         for(ProductVariant productVariant : product.getProductVariants()){
             ProductVariantDto productVariantDto = ProductVariantDto.builder()
                     .price(productVariant.getPrice())
-                    .imageUrl(productVariant.getImageUrl())
+                    .imageUrls(productVariant.getImageUrls())
                     .stockQuantity(productVariant.getStockQuantity())
                     .isAvailable(productVariant.getIsAvailable())
                     .createdAt(productVariant.getCreatedAt())
@@ -75,7 +75,7 @@ public class StoreController {
             for(ProductVariant productVariant : product.getProductVariants()){
                 ProductVariantDto productVariantDto = ProductVariantDto.builder()
                         .price(productVariant.getPrice())
-                        .imageUrl(productVariant.getImageUrl())
+                        .imageUrls(productVariant.getImageUrls())
                         .stockQuantity(productVariant.getStockQuantity())
                         .isAvailable(productVariant.getIsAvailable())
                         .createdAt(productVariant.getCreatedAt())

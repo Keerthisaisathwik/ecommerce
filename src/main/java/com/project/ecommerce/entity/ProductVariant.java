@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -28,7 +29,10 @@ public class ProductVariant {
 
     private Double price;
 
-    private String imageUrl;
+    @ElementCollection
+    @CollectionTable(name = "product_variant_images", joinColumns = @JoinColumn(name = "product_variant_id"))
+    @Column(name = "image_url")
+    private List<String> imageUrls;
 
     private Integer stockQuantity;
 
