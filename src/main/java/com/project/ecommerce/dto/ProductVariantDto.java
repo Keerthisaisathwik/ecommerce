@@ -16,6 +16,8 @@ import java.util.List;
 @Builder
 public class ProductVariantDto {
 
+    private Long id;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;

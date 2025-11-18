@@ -34,6 +34,7 @@ public class StoreController {
         List<ProductVariantDto> list = new ArrayList<>();
         for(ProductVariant productVariant : product.getProductVariants()){
             ProductVariantDto productVariantDto = ProductVariantDto.builder()
+                    .id(productVariant.getId())
                     .price(productVariant.getPrice())
                     .imageUrls(productVariant.getImageUrls())
                     .stockQuantity(productVariant.getStockQuantity())
@@ -74,6 +75,7 @@ public class StoreController {
             List<ProductVariantDto> list = new ArrayList<>();
             for(ProductVariant productVariant : product.getProductVariants()){
                 ProductVariantDto productVariantDto = ProductVariantDto.builder()
+                        .id(productVariant.getId())
                         .price(productVariant.getPrice())
                         .imageUrls(productVariant.getImageUrls())
                         .stockQuantity(productVariant.getStockQuantity())
