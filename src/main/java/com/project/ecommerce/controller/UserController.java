@@ -46,7 +46,6 @@ public class UserController {
             Product product = productService.getProductById(cartItem.getProductId()).orElse(null);
             ProductVariant productVariant = product.getProductVariants().stream().filter(variant -> variant.getId() == cartItem.getVariantId()).findFirst().get();
             ResponseGetCartItems cartItemDto = ResponseGetCartItems.builder()
-                    .id(cartItem.getId())
                     .productId(cartItem.getProductId())
                     .variantId(cartItem.getVariantId())
                     .quantity(cartItem.getQuantity())
@@ -61,23 +60,23 @@ public class UserController {
         return new ResponseEntity<>(APISuccessResponse.<List<ResponseGetCartItems>>builder().data(list).build(), HttpStatus.OK);
     }
 
+//    @PostMapping("/cart")
+//    public ResponseEntity<APISuccessResponse<?>> addToCart(@RequestBody CartItemDto cartItemDto, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException {
+//        String token = authorizationHeader.substring(7);
+//        User user = userService.findUserByToken(token);
+//        cartService.addProduct(user, cartItemDto.getVariantId(), cartItemDto.getQuantity());
+//        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
+//    }
+//
+//    @DeleteMapping("/cart/{cart-item-id}")
+//    public ResponseEntity<APISuccessResponse<?>> removeItemFromCart(@PathVariable("cart-item-id") Long itemId, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException{
+//        String token = authorizationHeader.substring(7);
+//        User user = userService.findUserByToken(token);
+//        cartService.removeProduct(user, itemId);
+//        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
+//    }
+
     @PostMapping("/cart")
-    public ResponseEntity<APISuccessResponse<?>> addToCart(@RequestBody CartItemDto cartItemDto, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException {
-        String token = authorizationHeader.substring(7);
-        User user = userService.findUserByToken(token);
-        cartService.addProduct(user, cartItemDto);
-        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
-    }
-
-    @DeleteMapping("/cart/{cart-item-id}")
-    public ResponseEntity<APISuccessResponse<?>> removeItemFromCart(@PathVariable("cart-item-id") Long itemId, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException{
-        String token = authorizationHeader.substring(7);
-        User user = userService.findUserByToken(token);
-        cartService.removeProduct(user, itemId);
-        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
-    }
-
-    @PatchMapping("/cart")
     public ResponseEntity<APISuccessResponse<?>> updateQuantity(@RequestBody UpdateCartItemQuantityDto updateCartItemQuantityDto, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);

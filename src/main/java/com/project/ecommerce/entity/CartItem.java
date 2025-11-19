@@ -11,16 +11,13 @@ import lombok.*;
 @Builder
 public class CartItem {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     @ManyToOne
     @JoinColumn(name = "cart_id")
     private Cart cart;
 
     private long productId;
 
+    @Id
     private long variantId;
 
     private int quantity;

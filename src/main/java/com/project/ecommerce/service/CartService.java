@@ -9,7 +9,7 @@ import com.project.ecommerce.exception.GenericException;
 import java.util.Set;
 
 public interface CartService {
-    public void addProduct(User user, CartItemDto cartItemDto) throws GenericException;
+    public void addProduct(User user, Long variantId, int quantity) throws GenericException;
 
     public void removeProduct(User user, Long itemId)  throws GenericException;
 
