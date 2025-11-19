@@ -1,6 +1,7 @@
 package com.project.ecommerce.controller;
 
 import com.project.ecommerce.dto.APISuccessResponse;
+import com.project.ecommerce.dto.GetCategoryProductsDTO;
 import com.project.ecommerce.dto.ProductDto;
 import com.project.ecommerce.dto.ProductVariantDto;
 import com.project.ecommerce.entity.Product;
@@ -68,37 +69,20 @@ public class StoreController {
     }
 
     @GetMapping("/category/{category_type}")
-    public ResponseEntity<APISuccessResponse<Page<ProductDto>>> getProductsByCategory(@PathVariable("category_type") CategoryType category, @RequestParam(defaultValue = "0") Integer page, @RequestParam(defaultValue = "10") Integer size){
+    public ResponseEntity<APISuccessResponse<Page<GetCategoryProductsDTO>>> getProductsByCategory(@PathVariable("category_type") CategoryType category, @RequestParam(defaultValue = "0") Integer page, @RequestParam(defaultValue = "10") Integer size){
         Pageable pageable = PageRequest.of(page, size);
         Page<Product> products = productRepository.findByCategory(category, pageable).orElse(null);
-        List<ProductDto> listOfProducts = products.stream().map(product -> {
-            List<ProductVariantDto> list = new ArrayList<>();
-            for(ProductVariant productVariant : product.getProductVariants()){
-                ProductVariantDto productVariantDto = ProductVariantDto.builder()
-                        .id(productVariant.getId())
-                        .price(productVariant.getPrice())
-                        .imageUrls(productVariant.getImageUrls())
-                        .stockQuantity(productVariant.getStockQuantity())
-                        .isAvailable(productVariant.getIsAvailable())
-                        .createdAt(productVariant.getCreatedAt())
-                        .updatedAt(productVariant.getUpdatedAt())
-                        .build();
-                list.add(productVariantDto);
-            }
-            ProductDto productDto = ProductDto.builder()
-                    .id(product.getId())
-                    .brand(product.getBrand())
-                    .averageRating(product.getAverageRating())
-                    .category(product.getCategory())
-                    .productVariants(list)
-                    .description(product.getDescription())
-                    .createdAt(product.getCreatedAt())
-                    .name(product.getName())
-                    .totalReviews(product.getTotalReviews())
-                    .updatedAt(product.getUpdatedAt())
+        List<GetCategoryProductsDTO> listOfProducts = products.stream().map(product -> {
+            ProductVariant defaultVariant = product.getProductVariants().getFirst();
+            GetCategoryProductsDTO getCategoryProductsDTO = GetCategoryProductsDTO.builder()
+                    .productId(product.getId())
+                    .imageUrl(defaultVariant.getImageUrls().getFirst())
+                    .title(product.getName())
+                    .rating(product.getAverageRating())
+                    .price(defaultVariant.getPrice())
                     .build();
-            return productDto;
+            return getCategoryProductsDTO;
         }).collect(Collectors.toList());
-        return new ResponseEntity<>(APISuccessResponse.<Page<ProductDto>>builder().data(new PageImpl<>(listOfProducts, pageable, products.getSize())).build(), HttpStatus.OK);
+        return new ResponseEntity<>(APISuccessResponse.<Page<GetCategoryProductsDTO>>builder().data(new PageImpl<>(listOfProducts, pageable, products.getSize())).build(), HttpStatus.OK);
     }
 }
