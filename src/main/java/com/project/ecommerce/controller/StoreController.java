@@ -75,7 +75,7 @@ public class StoreController {
         List<GetCategoryProductsDTO> listOfProducts = products.stream().map(product -> {
             ProductVariant defaultVariant = product.getProductVariants().getFirst();
             GetCategoryProductsDTO getCategoryProductsDTO = GetCategoryProductsDTO.builder()
-                    .productId(product.getId())
+                    .id(defaultVariant.getId())
                     .imageUrl(defaultVariant.getImageUrls().getFirst())
                     .title(product.getName())
                     .rating(product.getAverageRating())
