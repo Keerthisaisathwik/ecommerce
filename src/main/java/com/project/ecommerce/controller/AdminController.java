@@ -1,6 +1,7 @@
 package com.project.ecommerce.controller;
 
 import com.project.ecommerce.dto.APISuccessResponse;
+import com.project.ecommerce.dto.AddNewVariantToProduct;
 import com.project.ecommerce.dto.SaveProductDto;
 import com.project.ecommerce.repository.ProductRepository;
 import com.project.ecommerce.service.ProductService;
@@ -21,6 +22,12 @@ public class AdminController {
     @PostMapping("/create-product")
     public ResponseEntity<APISuccessResponse<?>> loginByAuthCode(@RequestBody SaveProductDto newProduct) {
         productService.saveProduct(newProduct);
+        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
+    }
+
+    @PostMapping("/add-variant")
+    public ResponseEntity<APISuccessResponse<?>> addNewVariantToProduct(@RequestBody AddNewVariantToProduct addNewVariantToProduct) throws Exception{
+        productService.addVariant(addNewVariantToProduct);
         return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
     }
 }

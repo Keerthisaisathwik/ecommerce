@@ -1,8 +1,10 @@
 package com.project.ecommerce.service.impl;
 
+import com.project.ecommerce.dto.AddNewVariantToProduct;
 import com.project.ecommerce.dto.SaveProductDto;
 import com.project.ecommerce.entity.Product;
 import com.project.ecommerce.entity.ProductVariant;
+import com.project.ecommerce.exception.GenericException;
 import com.project.ecommerce.repository.ProductRepository;
 import com.project.ecommerce.repository.ProductVariantRepository;
 import com.project.ecommerce.service.ProductService;
@@ -40,5 +42,19 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Optional<Product> getProductById(Long id) {
         return productRepository.findById(id);
+    }
+
+    @Override
+    public void addVariant(AddNewVariantToProduct addNewVariantToProduct) throws GenericException {
+        Product product =
+                productRepository.findById(addNewVariantToProduct.getProductId())
+                        .orElseThrow(() -> new GenericException("Can't find the id"));
+        ProductVariant productVariant = ProductVariant.builder()
+                .product(product)
+                .price(addNewVariantToProduct.getPrice())
+                .imageUrls(addNewVariantToProduct.getImageUrls())
+                .stockQuantity(addNewVariantToProduct.getStockQuantity())
+                .build();
+        productVariantRepository.save(productVariant);
     }
 }
