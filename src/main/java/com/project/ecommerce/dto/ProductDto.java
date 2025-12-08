@@ -38,4 +38,6 @@ public class ProductDto {
     private LocalDateTime updatedAt;
 
     private List<ProductVariantDto> productVariants;
+
+    private Integer stockQuantity;
 }

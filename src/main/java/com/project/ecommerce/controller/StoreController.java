@@ -57,8 +57,9 @@ public class StoreController {
                 .averageRating(product.getAverageRating())
                 .totalReviews(product.getTotalReviews())
                 .createdAt(productVariant.getCreatedAt())
-                .updatedAt(product.getUpdatedAt())
+                .updatedAt(productVariant.getUpdatedAt())
                 .productVariants(list)
+                .stockQuantity(productVariant.getStockQuantity())
                 .build();
         return new ResponseEntity<>(APISuccessResponse.<ProductDto>builder().data(productDto).build(), HttpStatus.OK);
     }
