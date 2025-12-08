@@ -18,13 +18,9 @@ public class ProductVariantDto {
 
     private Long id;
 
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
-
     private Double price;
 
-    private List<String> imageUrls;
+    private String imageUrl;
 
     private Integer stockQuantity;
 

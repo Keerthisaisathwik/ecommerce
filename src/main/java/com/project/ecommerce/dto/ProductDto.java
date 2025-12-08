@@ -25,6 +25,10 @@ public class ProductDto {
 
     private String brand;
 
+    private Double price;
+
+    private List<String> imageUrls;
+
     private Double averageRating;
 
     private Integer totalReviews;

@@ -8,6 +8,7 @@ import com.project.ecommerce.entity.Product;
 import com.project.ecommerce.entity.ProductVariant;
 import com.project.ecommerce.enums.CategoryType;
 import com.project.ecommerce.repository.ProductRepository;
+import com.project.ecommerce.repository.ProductVariantRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -29,33 +30,35 @@ public class StoreController {
 
     private final ProductRepository productRepository;
 
-    @GetMapping("/product/{product_id}")
-    public ResponseEntity<APISuccessResponse<ProductDto>> loginByAuthCode(@PathVariable("product_id") Long product_id) {
-        Product product = productRepository.findById(product_id).orElse(null);
+    private final ProductVariantRepository productVariantRepository;
+
+    @GetMapping("/product/{id}")
+    public ResponseEntity<APISuccessResponse<ProductDto>> getProductByVariantId(@PathVariable("id") Long id) {
+        ProductVariant productVariant = productVariantRepository.findById(id).orElse(null);
+        Product product = productVariant.getProduct();
         List<ProductVariantDto> list = new ArrayList<>();
-        for(ProductVariant productVariant : product.getProductVariants()){
+        for(ProductVariant variant : product.getProductVariants()){
             ProductVariantDto productVariantDto = ProductVariantDto.builder()
-                    .id(productVariant.getId())
-                    .price(productVariant.getPrice())
-                    .imageUrls(productVariant.getImageUrls())
-                    .stockQuantity(productVariant.getStockQuantity())
-                    .isAvailable(productVariant.getIsAvailable())
-                    .createdAt(productVariant.getCreatedAt())
-                    .updatedAt(productVariant.getUpdatedAt())
+                    .id(variant.getId())
+                    .price(variant.getPrice())
+                    .imageUrl(variant.getImageUrls().getFirst())
+                    .isAvailable(variant.getIsAvailable())
                     .build();
             list.add(productVariantDto);
         }
         ProductDto productDto = ProductDto.builder()
-                .id(product.getId())
-                .brand(product.getBrand())
-                .averageRating(product.getAverageRating())
+                .id(productVariant.getId())
                 .category(product.getCategory())
-                .productVariants(list)
-                .description(product.getDescription())
-                .createdAt(product.getCreatedAt())
                 .name(product.getName())
+                .description(product.getDescription())
+                .brand(product.getBrand())
+                .price(productVariant.getPrice())
+                .imageUrls(productVariant.getImageUrls())
+                .averageRating(product.getAverageRating())
                 .totalReviews(product.getTotalReviews())
+                .createdAt(productVariant.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
+                .productVariants(list)
                 .build();
         return new ResponseEntity<>(APISuccessResponse.<ProductDto>builder().data(productDto).build(), HttpStatus.OK);
     }
