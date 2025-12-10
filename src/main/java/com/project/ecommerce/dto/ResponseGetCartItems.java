@@ -15,8 +15,6 @@ public class ResponseGetCartItems {
 
     private long id;
 
-    private long productId;
-
     private long variantId;
 
     private int quantity;

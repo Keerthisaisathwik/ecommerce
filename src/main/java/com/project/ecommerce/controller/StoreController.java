@@ -89,4 +89,22 @@ public class StoreController {
         }).collect(Collectors.toList());
         return new ResponseEntity<>(APISuccessResponse.<Page<GetCategoryProductsDTO>>builder().data(new PageImpl<>(listOfProducts, pageable, products.getSize())).build(), HttpStatus.OK);
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<APISuccessResponse<Page<GetCategoryProductsDTO>>> getProductsByQuery(@RequestParam String query, @RequestParam(defaultValue = "0") Integer page, @RequestParam(defaultValue = "10") Integer size){
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Product> products = productRepository.searchProducts(query, pageable);
+        List<GetCategoryProductsDTO> listOfProducts = products.stream().map(product -> {
+            ProductVariant defaultVariant = product.getProductVariants().getFirst();
+            GetCategoryProductsDTO getCategoryProductsDTO = GetCategoryProductsDTO.builder()
+                    .id(defaultVariant.getId())
+                    .imageUrl(defaultVariant.getImageUrls().getFirst())
+                    .title(product.getName())
+                    .rating(product.getAverageRating())
+                    .price(defaultVariant.getPrice())
+                    .build();
+            return getCategoryProductsDTO;
+        }).collect(Collectors.toList());
+        return new ResponseEntity<>(APISuccessResponse.<Page<GetCategoryProductsDTO>>builder().data(new PageImpl<>(listOfProducts, pageable, products.getSize())).build(), HttpStatus.OK);
+    }
 }

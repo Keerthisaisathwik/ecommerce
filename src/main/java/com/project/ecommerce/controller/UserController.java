@@ -46,7 +46,6 @@ public class UserController {
             Product product = productService.getProductById(cartItem.getProductId()).orElse(null);
             ProductVariant productVariant = product.getProductVariants().stream().filter(variant -> variant.getId() == cartItem.getVariantId()).findFirst().get();
             ResponseGetCartItems cartItemDto = ResponseGetCartItems.builder()
-                    .productId(cartItem.getProductId())
                     .variantId(cartItem.getVariantId())
                     .quantity(cartItem.getQuantity())
                     .name(product.getName())
