@@ -1,13 +1,14 @@
 package com.project.ecommerce.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
-@NoArgsConstructor
+@Getter
+@Setter
 @AllArgsConstructor
-public class SignUpRequestDto {
+@NoArgsConstructor
+@Builder
+@ToString
+public class UserDetailsDto {
     String title;
     String firstName;
     String lastName;

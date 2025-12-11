@@ -101,7 +101,9 @@ public class AuthService {
                 .lastName(signUpRequestDto.getLastName())
                 .phoneNumber(signUpRequestDto.getPhoneNumber())
                 .email(signUpRequestDto.getEmail())
-                .address(signUpRequestDto.getAddress())
+                .addressLine1(signUpRequestDto.getAddressLine1())
+                .addressLine2(signUpRequestDto.getAddressLine2() != null ? signUpRequestDto.getAddressLine2() : "")
+                .addressLine3(signUpRequestDto.getAddressLine3() != null ? signUpRequestDto.getAddressLine3() : "")
                 .pincode(signUpRequestDto.getPincode())
                 .build()
         );

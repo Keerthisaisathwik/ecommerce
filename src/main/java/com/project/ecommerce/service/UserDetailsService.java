@@ -1,5 +1,6 @@
 package com.project.ecommerce.service;
 
+import com.project.ecommerce.entity.User;
 import com.project.ecommerce.entity.UserDetails;
 import com.project.ecommerce.repository.UserDetailsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,5 +20,9 @@ public class UserDetailsService {
 
     public UserDetails save(UserDetails userDetails){
         return userDetailsRepository.save(userDetails);
+    }
+
+    public UserDetails findUserDetailsByUser(User user){
+        return userDetailsRepository.findByUser(user).orElse(null);
     }
 }
