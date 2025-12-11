@@ -38,6 +38,8 @@ public class User implements UserDetails {
 
     private String verificationToken;
 
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isVerified = false;
 
     @Column(name = "reset_token")

@@ -17,6 +17,7 @@ import com.project.ecommerce.repository.CartRepository;
 import com.project.ecommerce.repository.UserDetailsRepository;
 import com.project.ecommerce.repository.UserRepository;
 import com.project.ecommerce.service.EmailService;
+import com.project.ecommerce.service.UserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -62,6 +63,8 @@ public class AuthService {
 
     private final CartRepository cartRepository;
 
+    private final UserDetailsService userDetailsService;
+
     public LoginResponseDto login(LoginRequestDto loginRequestDto) throws EmailVerificationException {
         Authentication authentication =
                 authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestDto.getUsername(), loginRequestDto.getPassword()));
@@ -81,8 +84,13 @@ public class AuthService {
 
     public void signup(SignUpRequestDto signUpRequestDto) throws GenericException {
         User user = userRepository.findByUsername(signUpRequestDto.getEmail()).orElse(null);
-        if (user != null) {
+        if (user != null && user.getIsVerified()) {
             throw new GenericException("Email already exists");
+        }else if(user != null && !user.getIsVerified()){
+            UserDetails userDetails = userDetailsService.findUserDetailsByUser(user);
+            user.setVerificationToken(jwtHelper.generateEmailToken(signUpRequestDto.getEmail()));
+            emailService.sendVerificationEmail(userDetails.getEmail(), user.getVerificationToken());
+            return;
         }
         Cart cart = new Cart();
         cartRepository.save(cart);

@@ -70,8 +70,7 @@ public class AuthController {
         UserDetails userDetails = userDetailsService.findByEmail(emailString).orElse(null);
         User user = userDetails.getUser();
         if(userDetails == null){
-            throw new GenericException("No account is registered with this email. Click to sign " +
-                    "up.");
+            throw new GenericException("No account is registered with this email. Click to sign up.");
         }
 
         if (user == null || user.getVerificationToken() == null) {
