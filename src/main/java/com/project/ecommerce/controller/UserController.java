@@ -96,4 +96,12 @@ public class UserController {
                 .build();
         return new ResponseEntity<>(APISuccessResponse.<UserDetailsDto>builder().data(userDetailsDto).build(), HttpStatus.OK);
     }
+
+    @PatchMapping("/user-details")
+    public ResponseEntity<APISuccessResponse<?>> updateUserDetails(@RequestBody UpdateUserDetailsDto updateUserDetailsDto, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        userDetailsService.updateUserDetails(updateUserDetailsDto, user);
+        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
+    }
 }
