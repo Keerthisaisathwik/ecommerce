@@ -47,11 +47,11 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public void removeProduct(User user, Long itemId) throws GenericException{
+    public void removeProduct(User user, Long itemId){
         Cart cart = user.getCart();
         CartItem cartItem = cart.getItems().stream().filter(item -> item.getVariantId() == itemId).findFirst().orElse(null);
         if(cartItem == null){
-            throw new GenericException("Could not find the item in cart to remove it");
+            return;
         }
         cart.getItems().remove(cartItem);
         cartRepository.save(cart);

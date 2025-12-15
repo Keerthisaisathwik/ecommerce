@@ -11,7 +11,7 @@ import java.util.Set;
 public interface CartService {
     public void addProduct(User user, Long variantId, int quantity) throws GenericException;
 
-    public void removeProduct(User user, Long itemId)  throws GenericException;
+    public void removeProduct(User user, Long itemId);
 
     public void setProductQuantity(User user, UpdateCartItemQuantityDto updateCartItemQuantityDto) throws GenericException;
 }

@@ -2,12 +2,9 @@ package com.project.ecommerce.controller;
 
 import com.project.ecommerce.dto.*;
 import com.project.ecommerce.entity.*;
+import com.project.ecommerce.enums.CategoryType;
 import com.project.ecommerce.exception.GenericException;
-import com.project.ecommerce.repository.ProductRepository;
-import com.project.ecommerce.service.CartService;
-import com.project.ecommerce.service.ProductService;
-import com.project.ecommerce.service.UserDetailsService;
-import com.project.ecommerce.service.UserService;
+import com.project.ecommerce.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -31,6 +28,8 @@ public class UserController {
     private final ProductService productService;
 
     private final UserDetailsService userDetailsService;
+
+    private final WishlistService wishlistService;
 
     @GetMapping("/cart")
     public ResponseEntity<APISuccessResponse<List<ResponseGetCartItems>>> getCartItems(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
@@ -102,6 +101,30 @@ public class UserController {
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
         userDetailsService.updateUserDetails(updateUserDetailsDto, user);
+        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
+    }
+
+    @GetMapping("/wishlist")
+    public ResponseEntity<APISuccessResponse<?>> getUserWishlistProducts(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        List<WishListItemDto> wishlist = wishlistService.getAllWishlistItems(user);
+        return new ResponseEntity<>(APISuccessResponse.<List<WishListItemDto>>builder().data(wishlist).build(), HttpStatus.OK);
+    }
+
+    @PatchMapping("/wishlist")
+    public ResponseEntity<APISuccessResponse<?>> updateUserWishlistProducts(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody RequestAddToWishlistDto requestAddToWishlistDto) throws GenericException{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        wishlistService.addToWishlist(user, requestAddToWishlistDto.getVariantId());
+        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/wishlist/{variant_id}")
+    public ResponseEntity<APISuccessResponse<?>> removeProductFromWishlist(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("variant_id") Long variant_id) throws GenericException{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        wishlistService.removeFromWishlist(user, variant_id);
         return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
     }
 }
