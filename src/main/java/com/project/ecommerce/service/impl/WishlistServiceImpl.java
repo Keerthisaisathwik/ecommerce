@@ -10,6 +10,7 @@ import com.project.ecommerce.repository.WishlistRepository;
 import com.project.ecommerce.service.WishlistService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class WishlistServiceImpl implements WishlistService {
 
     @Override
     public List<WishListItemDto> getAllWishlistItems(User user) {
-        List<WishListItemDto> wishlist = wishlistRepository.findByUser(user)..stream()
+        List<WishListItemDto> wishlist = wishlistRepository.findByUser(user).stream()
                 .map((item) ->
                 {
                     ProductVariant productVariant = item.getProductVariant();
@@ -55,6 +56,7 @@ public class WishlistServiceImpl implements WishlistService {
         wishlistRepository.save(wishlist);
     }
 
+    @Transactional
     @Override
     public void removeFromWishlist(User user, Long variantId) throws GenericException {
         ProductVariant productVariant = productVariantRepository.findById(variantId).orElse(null);
