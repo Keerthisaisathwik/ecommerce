@@ -91,6 +91,7 @@ public class CartServiceImpl implements CartService {
                     .isAvailable(productVariant.getIsAvailable())
                     .imageUrls(productVariant.getImageUrls())
                     .saveForLater(cartItem.getSaveForLater())
+                    .discountedPrice(productVariant.getDiscountedPrice())
                     .build();
             list.add(cartItemDto);
             if(!cartItem.getSaveForLater()){

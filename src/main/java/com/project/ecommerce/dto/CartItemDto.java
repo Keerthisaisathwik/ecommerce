@@ -29,5 +29,7 @@ public class CartItemDto {
     @JsonProperty("isAvailable")
     private boolean isAvailable;
 
+    private Double discountedPrice;
+
     private boolean saveForLater;
 }
