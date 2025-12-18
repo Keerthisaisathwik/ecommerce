@@ -2,6 +2,9 @@ package com.project.ecommerce.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -34,5 +37,8 @@ public class Wishlist {
     @ManyToOne
     @JoinColumn(name = "product_variant_id", nullable = false)
     private ProductVariant productVariant;
+
+    @CreationTimestamp
+    private LocalDateTime addedAt;
 }
 

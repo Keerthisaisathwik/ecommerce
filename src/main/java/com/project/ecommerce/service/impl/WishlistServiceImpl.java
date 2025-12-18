@@ -5,6 +5,7 @@ import com.project.ecommerce.entity.ProductVariant;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.entity.Wishlist;
 import com.project.ecommerce.exception.GenericException;
+import com.project.ecommerce.repository.CartItemRepository;
 import com.project.ecommerce.repository.ProductVariantRepository;
 import com.project.ecommerce.repository.WishlistRepository;
 import com.project.ecommerce.service.WishlistService;
@@ -23,6 +24,9 @@ public class WishlistServiceImpl implements WishlistService {
     @Autowired
     private ProductVariantRepository productVariantRepository;
 
+    @Autowired
+    private CartItemRepository cartItemRepository;
+
     @Override
     public List<WishListItemDto> getAllWishlistItems(User user) {
         List<WishListItemDto> wishlist = wishlistRepository.findByUser(user).stream()
@@ -37,6 +41,8 @@ public class WishlistServiceImpl implements WishlistService {
                             .price(productVariant.getPrice())
                             .imageUrl(productVariant.getImageUrls().getFirst())
                             .isAvailable(productVariant.getIsAvailable())
+                            .discountedPrice(productVariant.getDiscountedPrice())
+                            .addedAt(item.getAddedAt())
                             .build();
                 }).toList();
         System.out.println(wishlist);
