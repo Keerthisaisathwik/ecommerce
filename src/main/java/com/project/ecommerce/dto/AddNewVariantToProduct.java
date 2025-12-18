@@ -20,4 +20,8 @@ public class AddNewVariantToProduct {
     private List<String> imageUrls;
 
     private Integer stockQuantity;
+
+    private Double taxPercentage;
+
+    private Double discountedPrice;
 }

@@ -64,4 +64,9 @@ public class WishlistServiceImpl implements WishlistService {
             throw new GenericException("Variant Id : "+ variantId +" is not present in the database please recheck the variant Id");
         wishlistRepository.deleteByUserAndProductVariant(user, productVariant);
     }
+
+    @Override
+    public boolean existsByUserAndProductVariant(User user, ProductVariant productVariant) {
+        return wishlistRepository.findByUserAndProductVariant(user,productVariant).isPresent();
+    }
 }

@@ -35,6 +35,8 @@ public class ProductServiceImpl implements ProductService {
                 .price(newProduct.getPrice())
                 .imageUrls(newProduct.getImageUrls())
                 .stockQuantity(newProduct.getStockQuantity())
+                .discountedPrice(newProduct.getDiscountedPrice())
+                .taxPercentage(newProduct.getTaxPercentage())
                 .build();
         productVariantRepository.save(productVariant);
     }
@@ -54,6 +56,8 @@ public class ProductServiceImpl implements ProductService {
                 .price(addNewVariantToProduct.getPrice())
                 .imageUrls(addNewVariantToProduct.getImageUrls())
                 .stockQuantity(addNewVariantToProduct.getStockQuantity())
+                .discountedPrice(addNewVariantToProduct.getDiscountedPrice())
+                .taxPercentage(addNewVariantToProduct.getTaxPercentage())
                 .build();
         productVariantRepository.save(productVariant);
     }

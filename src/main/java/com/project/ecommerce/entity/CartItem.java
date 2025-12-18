@@ -9,7 +9,17 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Table(
+        indexes = {
+                @Index(name = "idx_cart_variant", columnList = "cart_id, variantId")
+        },
+        uniqueConstraints = @UniqueConstraint(columnNames = {"cart_id", "variantId"})
+)
 public class CartItem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "cart_id")
@@ -17,8 +27,10 @@ public class CartItem {
 
     private long productId;
 
-    @Id
     private long variantId;
 
     private int quantity;
+
+    @Builder.Default
+    private Boolean saveForLater = false;
 }

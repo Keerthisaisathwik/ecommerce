@@ -31,4 +31,8 @@ public class SaveProductDto {
 
     @Builder.Default
     private Boolean isAvailable = true;
+
+    private Double taxPercentage;
+
+    private Double discountedPrice;
 }

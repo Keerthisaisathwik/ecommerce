@@ -4,22 +4,31 @@ import com.project.ecommerce.dto.APISuccessResponse;
 import com.project.ecommerce.dto.GetCategoryProductsDTO;
 import com.project.ecommerce.dto.ProductDto;
 import com.project.ecommerce.dto.ProductVariantDto;
+import com.project.ecommerce.entity.CartItem;
 import com.project.ecommerce.entity.Product;
 import com.project.ecommerce.entity.ProductVariant;
+import com.project.ecommerce.entity.User;
 import com.project.ecommerce.enums.CategoryType;
+import com.project.ecommerce.exception.GenericException;
 import com.project.ecommerce.repository.ProductRepository;
 import com.project.ecommerce.repository.ProductVariantRepository;
+import com.project.ecommerce.service.CartService;
+import com.project.ecommerce.service.OrderService;
+import com.project.ecommerce.service.UserService;
+import com.project.ecommerce.service.WishlistService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,9 +41,25 @@ public class StoreController {
 
     private final ProductVariantRepository productVariantRepository;
 
+    private final UserService userService;
+
+    private final CartService cartService;
+
+    private final WishlistService wishlistService;
+
+    private final OrderService orderService;
+
     @GetMapping("/product/{id}")
-    public ResponseEntity<APISuccessResponse<ProductDto>> getProductByVariantId(@PathVariable("id") Long id) {
+    public ResponseEntity<APISuccessResponse<ProductDto>> getProductByVariantId(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader, @PathVariable("id") Long id) throws GenericException {
+        User user = null;
+        CartItem cartItem = null;
+        if(authorizationHeader != null){
+            String token = authorizationHeader.substring(7);
+            user = userService.findUserByToken(token);
+        }
         ProductVariant productVariant = productVariantRepository.findById(id).orElse(null);
+        if(productVariant == null)
+            throw new GenericException("Given productVariant Id is not correct or does not exist");
         Product product = productVariant.getProduct();
         List<ProductVariantDto> list = new ArrayList<>();
         for(ProductVariant variant : product.getProductVariants()){
@@ -60,6 +85,9 @@ public class StoreController {
                 .updatedAt(productVariant.getUpdatedAt())
                 .productVariants(list)
                 .stockQuantity(productVariant.getStockQuantity())
+                .isPreviouslyOrdered(orderService.isPreviouslyOrdered(productVariant.getId(), user))
+                .cartQuantity(user == null ? 0 : cartService.findSpecificCartItemQuantity(user.getId(), productVariant.getId()))
+                .isWishlisted(user != null && wishlistService.existsByUserAndProductVariant(user, productVariant))
                 .build();
         return new ResponseEntity<>(APISuccessResponse.<ProductDto>builder().data(productDto).build(), HttpStatus.OK);
     }
@@ -73,21 +101,22 @@ public class StoreController {
     }
 
     @GetMapping("/category/{category_type}")
-    public ResponseEntity<APISuccessResponse<Page<GetCategoryProductsDTO>>> getProductsByCategory(@PathVariable("category_type") CategoryType category, @RequestParam(defaultValue = "0") Integer page, @RequestParam(defaultValue = "10") Integer size){
+    public ResponseEntity<APISuccessResponse<?>> getProductsByCategory(@PathVariable("category_type") CategoryType category, @RequestParam(defaultValue = "0") Integer page, @RequestParam(defaultValue = "10") Integer size) throws GenericException{
         Pageable pageable = PageRequest.of(page, size);
-        Page<Product> products = productRepository.findByCategory(category, pageable).orElse(null);
-        List<GetCategoryProductsDTO> listOfProducts = products.stream().map(product -> {
+        Page<Product> products = productRepository.findByCategory(category, pageable);
+        if(products.isEmpty())
+            return new ResponseEntity<>(APISuccessResponse.builder().data(new PageImpl<>(Collections.emptyList(), pageable, products.getTotalElements())).build(), HttpStatus.OK);
+        List<GetCategoryProductsDTO> listOfProducts = products.stream().filter(product -> !product.getProductVariants().isEmpty()).map(product -> {
             ProductVariant defaultVariant = product.getProductVariants().getFirst();
-            GetCategoryProductsDTO getCategoryProductsDTO = GetCategoryProductsDTO.builder()
+            return GetCategoryProductsDTO.builder()
                     .id(defaultVariant.getId())
                     .imageUrl(defaultVariant.getImageUrls().getFirst())
                     .title(product.getName())
                     .rating(product.getAverageRating())
                     .price(defaultVariant.getPrice())
                     .build();
-            return getCategoryProductsDTO;
         }).collect(Collectors.toList());
-        return new ResponseEntity<>(APISuccessResponse.<Page<GetCategoryProductsDTO>>builder().data(new PageImpl<>(listOfProducts, pageable, products.getSize())).build(), HttpStatus.OK);
+        return new ResponseEntity<>(APISuccessResponse.<Page<GetCategoryProductsDTO>>builder().data(new PageImpl<>(listOfProducts, pageable, products.getTotalElements())).build(), HttpStatus.OK);
     }
 
     @GetMapping("/search")
@@ -96,14 +125,13 @@ public class StoreController {
         Page<Product> products = productRepository.searchProducts(query, pageable);
         List<GetCategoryProductsDTO> listOfProducts = products.stream().map(product -> {
             ProductVariant defaultVariant = product.getProductVariants().getFirst();
-            GetCategoryProductsDTO getCategoryProductsDTO = GetCategoryProductsDTO.builder()
+            return GetCategoryProductsDTO.builder()
                     .id(defaultVariant.getId())
                     .imageUrl(defaultVariant.getImageUrls().getFirst())
                     .title(product.getName())
                     .rating(product.getAverageRating())
                     .price(defaultVariant.getPrice())
                     .build();
-            return getCategoryProductsDTO;
         }).collect(Collectors.toList());
         return new ResponseEntity<>(APISuccessResponse.<Page<GetCategoryProductsDTO>>builder().data(new PageImpl<>(listOfProducts, pageable, products.getSize())).build(), HttpStatus.OK);
     }

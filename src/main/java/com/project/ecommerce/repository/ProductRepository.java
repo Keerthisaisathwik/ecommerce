@@ -14,9 +14,7 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findById(Long id);
 
-    Optional<Page<Product>> findByCategory(CategoryType categoryType, Pageable pageable);
-
-    Optional<List<Product>> findByCategory(CategoryType categoryType);
+    Page<Product> findByCategory(CategoryType categoryType, Pageable pageable);
 
     @Query("""
     SELECT p FROM Product p 

@@ -2,7 +2,6 @@ package com.project.ecommerce.controller;
 
 import com.project.ecommerce.dto.*;
 import com.project.ecommerce.entity.*;
-import com.project.ecommerce.enums.CategoryType;
 import com.project.ecommerce.exception.GenericException;
 import com.project.ecommerce.service.*;
 import lombok.RequiredArgsConstructor;
@@ -31,43 +30,14 @@ public class UserController {
 
     private final WishlistService wishlistService;
 
+    private final OrderService orderService;
+
     @GetMapping("/cart")
-    public ResponseEntity<APISuccessResponse<List<ResponseGetCartItems>>> getCartItems(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
+    public ResponseEntity<APISuccessResponse<ResponseGetCartItemsDto>> getCartItems(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
-        List<ResponseGetCartItems> list = new ArrayList<>();
-        for(CartItem cartItem : user.getCart().getItems()){
-            Product product = productService.getProductById(cartItem.getProductId()).orElse(null);
-            ProductVariant productVariant = product.getProductVariants().stream().filter(variant -> variant.getId() == cartItem.getVariantId()).findFirst().get();
-            ResponseGetCartItems cartItemDto = ResponseGetCartItems.builder()
-                    .variantId(cartItem.getVariantId())
-                    .quantity(cartItem.getQuantity())
-                    .name(product.getName())
-                    .description(product.getDescription())
-                    .price(productVariant.getPrice())
-                    .isAvailable(productVariant.getIsAvailable())
-                    .imageUrls(productVariant.getImageUrls())
-                    .build();
-            list.add(cartItemDto);
-        }
-        return new ResponseEntity<>(APISuccessResponse.<List<ResponseGetCartItems>>builder().data(list).build(), HttpStatus.OK);
+        return new ResponseEntity<>(APISuccessResponse.<ResponseGetCartItemsDto>builder().data(cartService.getCartDetails(user)).build(), HttpStatus.OK);
     }
-
-//    @PostMapping("/cart")
-//    public ResponseEntity<APISuccessResponse<?>> addToCart(@RequestBody CartItemDto cartItemDto, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException {
-//        String token = authorizationHeader.substring(7);
-//        User user = userService.findUserByToken(token);
-//        cartService.addProduct(user, cartItemDto.getVariantId(), cartItemDto.getQuantity());
-//        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
-//    }
-//
-//    @DeleteMapping("/cart/{cart-item-id}")
-//    public ResponseEntity<APISuccessResponse<?>> removeItemFromCart(@PathVariable("cart-item-id") Long itemId, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException{
-//        String token = authorizationHeader.substring(7);
-//        User user = userService.findUserByToken(token);
-//        cartService.removeProduct(user, itemId);
-//        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
-//    }
 
     @PostMapping("/cart")
     public ResponseEntity<APISuccessResponse<?>> updateQuantity(@RequestBody UpdateCartItemQuantityDto updateCartItemQuantityDto, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException{
@@ -126,6 +96,82 @@ public class UserController {
         User user = userService.findUserByToken(token);
         wishlistService.removeFromWishlist(user, variant_id);
         return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
+    }
+
+    @GetMapping("/order")
+    public ResponseEntity<APISuccessResponse<List<ResponseOrderDto>>> getAllOrders(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        List<ResponseOrderDto> responseOrderDtoList = orderService.getAllOrders(user).stream().map(order -> {
+            return ResponseOrderDto.builder()
+                    .id(order.getId())
+                    .orderNumber(order.getOrderNumber())
+                    .status(order.getStatus())
+                    .paymentMethod(order.getPaymentMethod())
+                    .paymentStatus(order.getPaymentStatus())
+                    .paymentTransactionId(order.getPaymentTransactionId())
+                    .subtotal(order.getSubtotal())
+                    .discountedPrice(order.getDiscountedPrice())
+                    .shippingCharge(order.getShippingCharge())
+                    .shippingAddress(order.getShippingAddress())
+                    .billingAddress(order.getBillingAddress())
+                    .createdAt(order.getCreatedAt())
+                    .paidAt(order.getPaidAt())
+                    .shippedAt(order.getShippedAt())
+                    .deliveredAt(order.getDeliveredAt())
+                    .tax(order.getTax())
+                    .totalAmount(order.getTotalAmount())
+                    .build();
+        }).toList();
+        return new ResponseEntity<>(APISuccessResponse.<List<ResponseOrderDto>>builder().data(responseOrderDtoList).build(), HttpStatus.OK);
+    }
+
+    @PostMapping("/order")
+    public ResponseEntity<APISuccessResponse<?>> placeAnOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody PlaceOrderDto placeOrderDto) {
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        orderService.placeOrder(placeOrderDto, user);
+        return new ResponseEntity<>(APISuccessResponse.builder().build(), HttpStatus.OK);
+    }
+
+    @GetMapping("/order/{order_id}")
+    public ResponseEntity<APISuccessResponse<ResponseOrderDto>> getOrderDetailById(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("order_id") Long id) throws GenericException{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        Order order = orderService.getOrderDetails(id);
+        if (order == null){
+            throw new GenericException("Invalid order id");
+        } else if(user != null && user.getId() != order.getUser().getId()){
+            throw new GenericException("You can't access this information");
+        }
+        ResponseOrderDto responseOrderDto = ResponseOrderDto.builder()
+                .id(order.getId())
+                .orderNumber(order.getOrderNumber())
+                .status(order.getStatus())
+                .paymentMethod(order.getPaymentMethod())
+                .paymentStatus(order.getPaymentStatus())
+                .paymentTransactionId(order.getPaymentTransactionId())
+                .subtotal(order.getSubtotal())
+                .discountedPrice(order.getDiscountedPrice())
+                .shippingCharge(order.getShippingCharge())
+                .shippingAddress(order.getShippingAddress())
+                .billingAddress(order.getBillingAddress())
+                .createdAt(order.getCreatedAt())
+                .paidAt(order.getPaidAt())
+                .shippedAt(order.getShippedAt())
+                .deliveredAt(order.getDeliveredAt())
+                .tax(order.getTax())
+                .totalAmount(order.getTotalAmount())
+                .build();
+        return new ResponseEntity<>(APISuccessResponse.<ResponseOrderDto>builder().data(responseOrderDto).build(), HttpStatus.OK);
+    }
+
+    @PostMapping("/single-order")
+    public ResponseEntity<APISuccessResponse<?>> placeAnSingleItemOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody PlaceSingleOrderDto placeSingleOrderDto) throws GenericException {
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        orderService.placeSingleItemOrder(placeSingleOrderDto, user);
+        return new ResponseEntity<>(APISuccessResponse.builder().build(), HttpStatus.OK);
     }
 }
 

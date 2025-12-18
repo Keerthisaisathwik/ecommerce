@@ -40,4 +40,10 @@ public class ProductDto {
     private List<ProductVariantDto> productVariants;
 
     private Integer stockQuantity;
+
+    private Boolean isPreviouslyOrdered;
+
+    private Integer cartQuantity;
+
+    private Boolean isWishlisted;
 }

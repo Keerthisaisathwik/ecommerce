@@ -3,6 +3,8 @@ package com.project.ecommerce.entity;
 import com.project.ecommerce.enums.CategoryType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,10 +24,13 @@ public class Product {
     @Enumerated(EnumType.STRING)
     private CategoryType category;
 
+    @Column(nullable=false)
     private String name;
 
+    @Column(nullable=false)
     private String description;
 
+    @Column(nullable=false)
     private String brand;
 
     @Builder.Default
@@ -34,8 +39,10 @@ public class Product {
     @Builder.Default
     private Integer totalReviews = 0;
 
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "product")
@@ -45,15 +52,7 @@ public class Product {
     // Automatically set dates before persisting/updating
     @PrePersist
     public void prePersist() {
-        LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
         if (averageRating == null) this.averageRating = 0.0;
         if (totalReviews == null) this.totalReviews = 0;
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
     }
 }
