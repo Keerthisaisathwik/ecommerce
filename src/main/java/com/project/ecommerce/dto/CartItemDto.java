@@ -1,5 +1,6 @@
 package com.project.ecommerce.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,6 +26,7 @@ public class CartItemDto {
 
     private List<String> imageUrls;
 
+    @JsonProperty("isAvailable")
     private boolean isAvailable;
 
     private boolean saveForLater;
