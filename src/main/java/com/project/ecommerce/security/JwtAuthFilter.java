@@ -6,6 +6,9 @@ import com.project.ecommerce.entity.User;
 import com.project.ecommerce.enums.UserRole;
 import com.project.ecommerce.exception.GenericIOException;
 import com.project.ecommerce.repository.UserRepository;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,38 +48,42 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        String token = requestTokenHeader.split("Bearer ")[1];
-        String username = jwtHelper.getUsernameByToken(token);
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            try {
+        try {
+            String token = requestTokenHeader.split("Bearer ")[1];
+            String username = jwtHelper.getUsernameByToken(token);
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            Pattern userPattern = Pattern.compile("/user/(\\d+)/");
-            Matcher userMatcher = userPattern.matcher(uri);
+                Pattern userPattern = Pattern.compile("/user/(\\d+)/");
+                Matcher userMatcher = userPattern.matcher(uri);
 
-            Pattern adminPattern = Pattern.compile("/admin/");
-            Matcher adminMatcher = adminPattern.matcher(uri);
+                Pattern adminPattern = Pattern.compile("/admin/");
+                Matcher adminMatcher = adminPattern.matcher(uri);
 
-            if(userMatcher.find()){
-                Long pathUserId = Long.parseLong(userMatcher.group(1));
-                User user = userRepository.findByUsername(username).orElseThrow();
-                if (!user.getId().equals(pathUserId) && user.getRole() != UserRole.ADMIN) {
-                    throw new GenericIOException("You are not authorized to access other users' information");
+                if (userMatcher.find()) {
+                    Long pathUserId = Long.parseLong(userMatcher.group(1));
+                    User user = userRepository.findByUsername(username).orElseThrow();
+                    if (!user.getId().equals(pathUserId) && user.getRole() != UserRole.ADMIN) {
+                        throw new GenericIOException("You are not authorized to access other " +
+                                "users' information");
+                    }
                 }
-            }
 
-            User user = userRepository.findByUsername(username).orElseThrow();
+                User user = userRepository.findByUsername(username).orElseThrow();
 
-            if(adminMatcher.find() && !(user.getRole()== UserRole.ADMIN)){
-                throw new GenericIOException("You are not authorized to use this API");
-            }
+                if (adminMatcher.find() && !(user.getRole() == UserRole.ADMIN)) {
+                    throw new GenericIOException("You are not authorized to use this API");
+                }
 
-            UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
-                    new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-            SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-            }catch (Exception e) {
-                printException(e.getMessage(),response);
-                return;
+                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
+                        new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
             }
+        } catch (MalformedJwtException | SignatureException | ExpiredJwtException e) {
+            printException("Invalid or expired JWT token", response);
+            return;
+        } catch (Exception e) {
+            printException(e.getMessage(), response);
+            return;
         }
         filterChain.doFilter(request, response);
     }

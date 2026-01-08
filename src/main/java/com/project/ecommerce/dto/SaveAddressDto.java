@@ -18,4 +18,16 @@ public class SaveAddressDto {
     private String addressLine3;
 
     private String pincode;
+
+    private String name;
+
+    private Long phoneNumber;
+
+    private Long alternativePhoneNumber;
+
+    private String country;
+
+    private String state;
+
+    private String city;
 }

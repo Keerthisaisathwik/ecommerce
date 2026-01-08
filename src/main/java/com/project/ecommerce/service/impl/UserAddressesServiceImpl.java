@@ -37,6 +37,12 @@ public class UserAddressesServiceImpl implements UserAddressesService {
                 .addressLine2(saveAddressDto.getAddressLine2())
                 .addressLine3(saveAddressDto.getAddressLine3() ==null || saveAddressDto.getAddressLine3().isEmpty() ? null : saveAddressDto.getAddressLine3())
                 .pincode(saveAddressDto.getPincode())
+                .name(saveAddressDto.getName())
+                .city(saveAddressDto.getCity())
+                .state(saveAddressDto.getState())
+                .country(saveAddressDto.getCountry())
+                .phoneNumber(saveAddressDto.getPhoneNumber())
+                .alternativePhoneNumber(saveAddressDto.getAlternativePhoneNumber())
                 .build();
         userAddressesRepository.save(userAddress);
     }
@@ -51,6 +57,12 @@ public class UserAddressesServiceImpl implements UserAddressesService {
         userAddress.setAddressLine2(addressDto.getAddressLine2());
         userAddress.setAddressLine3(addressDto.getAddressLine3());
         userAddress.setPincode(addressDto.getPincode());
+        userAddress.setName(addressDto.getName());
+        userAddress.setCity(addressDto.getCity());
+        userAddress.setState(addressDto.getState());
+        userAddress.setCountry(addressDto.getCountry());
+        userAddress.setPhoneNumber(addressDto.getPhoneNumber());
+        userAddress.setAlternativePhoneNumber(addressDto.getAlternativePhoneNumber());
         userAddressesRepository.save(userAddress);
     }
 

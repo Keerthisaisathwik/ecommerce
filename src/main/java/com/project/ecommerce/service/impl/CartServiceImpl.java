@@ -111,7 +111,6 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    @Transactional
     public void saveForLater(User user, SaveForLaterDto saveForLaterDto) throws GenericException {
         CartItem cartItem = cartItemRepository.findById(saveForLaterDto.getCartItemId()).orElseThrow(() -> new GenericException("cartItem not found"));
         if(!cartItem.getCart().getId().equals(user.getCart().getId())){

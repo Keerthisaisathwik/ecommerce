@@ -25,6 +25,18 @@ public class UserAddresses {
     @JoinColumn(name = "user", nullable = false)
     private User user;
 
+    private String name;
+
+    private Long phoneNumber;
+
+    private Long alternativePhoneNumber;
+
+    private String country;
+
+    private String state;
+
+    private String city;
+
     private String addressLine1;
 
     private String addressLine2;

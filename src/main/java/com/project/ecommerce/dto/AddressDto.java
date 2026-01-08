@@ -13,6 +13,18 @@ public class AddressDto {
 
     private long id;
 
+    private String name;
+
+    private Long phoneNumber;
+
+    private Long alternativePhoneNumber;
+
+    private String country;
+
+    private String state;
+
+    private String city;
+
     private String addressLine1;
 
     private String addressLine2;

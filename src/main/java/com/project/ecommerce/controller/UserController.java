@@ -193,6 +193,12 @@ public class UserController {
                             .addressLine2(address.getAddressLine2())
                             .addressLine3(address.getAddressLine3())
                             .pincode(address.getPincode())
+                            .city(address.getCity())
+                            .state(address.getState())
+                            .country(address.getCountry())
+                            .phoneNumber(address.getPhoneNumber())
+                            .alternativePhoneNumber(address.getAlternativePhoneNumber())
+                            .name(address.getName())
                     .build());
         }
         return new ResponseEntity<>(APISuccessResponse.<List<AddressDto>>builder().data(userAddressesDto).build(),
