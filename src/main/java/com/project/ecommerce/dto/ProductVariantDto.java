@@ -22,6 +22,8 @@ public class ProductVariantDto {
 
     private String imageUrl;
 
+    private Double discountedPrice;
+
     private Integer stockQuantity;
 
     private Boolean isAvailable = true;

@@ -68,6 +68,7 @@ public class StoreController {
                     .price(variant.getPrice())
                     .imageUrl(variant.getImageUrls().getFirst())
                     .isAvailable(variant.getIsAvailable())
+                    .discountedPrice(variant.getDiscountedPrice())
                     .build();
             list.add(productVariantDto);
         }

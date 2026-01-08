@@ -2,6 +2,7 @@ package com.project.ecommerce.service.impl;
 
 import com.project.ecommerce.dto.CartItemDto;
 import com.project.ecommerce.dto.ResponseGetCartItemsDto;
+import com.project.ecommerce.dto.SaveForLaterDto;
 import com.project.ecommerce.dto.UpdateCartItemQuantityDto;
 import com.project.ecommerce.entity.*;
 import com.project.ecommerce.exception.GenericException;
@@ -9,6 +10,7 @@ import com.project.ecommerce.repository.*;
 import com.project.ecommerce.service.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,6 +85,7 @@ public class CartServiceImpl implements CartService {
             Product product = productRepository.findById(cartItem.getProductId()).orElse(null);
             ProductVariant productVariant = product.getProductVariants().stream().filter(variant -> variant.getId() == cartItem.getVariantId()).findFirst().get();
             CartItemDto cartItemDto = CartItemDto.builder()
+                    .id(cartItem.getId())
                     .variantId(cartItem.getVariantId())
                     .quantity(cartItem.getQuantity())
                     .name(product.getName())
@@ -90,11 +93,11 @@ public class CartServiceImpl implements CartService {
                     .price(productVariant.getPrice())
                     .isAvailable(productVariant.getIsAvailable())
                     .imageUrls(productVariant.getImageUrls())
-                    .saveForLater(cartItem.getSaveForLater())
+                    .saveForLater(cartItem.isSaveForLater())
                     .discountedPrice(productVariant.getDiscountedPrice())
                     .build();
             list.add(cartItemDto);
-            if(!cartItem.getSaveForLater()){
+            if(!cartItem.isSaveForLater()){
                 responseGetCartItemsDto.setSubTotal(responseGetCartItemsDto.getSubTotal() + (cartItemDto.getQuantity() * productVariant.getPrice()));
                 responseGetCartItemsDto.setDiscountedPrice(responseGetCartItemsDto.getDiscountedPrice() + (cartItemDto.getQuantity() * productVariant.getDiscountedPrice()));
                 responseGetCartItemsDto.setTax(responseGetCartItemsDto.getTax() + (cartItemDto.getQuantity() * (productVariant.getDiscountedPrice() * (productVariant.getTaxPercentage() / 100))));
@@ -105,5 +108,16 @@ public class CartServiceImpl implements CartService {
         responseGetCartItemsDto.setShippingCharge(responseGetCartItemsDto.getTotalAmount() == 0 || responseGetCartItemsDto.getTotalAmount() >= 500 ? 0.0 : 40.0);
         responseGetCartItemsDto.setTax(Math.round(responseGetCartItemsDto.getTax() * 100.0) / 100.0);
         return responseGetCartItemsDto;
+    }
+
+    @Override
+    @Transactional
+    public void saveForLater(User user, SaveForLaterDto saveForLaterDto) throws GenericException {
+        CartItem cartItem = cartItemRepository.findById(saveForLaterDto.getCartItemId()).orElseThrow(() -> new GenericException("cartItem not found"));
+        if(!cartItem.getCart().getId().equals(user.getCart().getId())){
+            throw new GenericException("Cannot access other user cart");
+        }
+        cartItem.setSaveForLater(saveForLaterDto.isSavedForLater());
+        cartItemRepository.save(cartItem);
     }
 }

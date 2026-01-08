@@ -34,10 +34,6 @@ public class UserDetailsService {
         userDetails.setFirstName(updateUserDetailsDto.getFirstName());
         userDetails.setLastName(updateUserDetailsDto.getLastName());
         userDetails.setPhoneNumber(updateUserDetailsDto.getPhoneNumber());
-        userDetails.setAddressLine1(updateUserDetailsDto.getAddressLine1());
-        userDetails.setAddressLine2(updateUserDetailsDto.getAddressLine2());
-        userDetails.setAddressLine3(updateUserDetailsDto.getAddressLine3());
-        userDetails.setPincode(updateUserDetailsDto.getPincode());
         userDetailsRepository.save(userDetails);
     }
 }

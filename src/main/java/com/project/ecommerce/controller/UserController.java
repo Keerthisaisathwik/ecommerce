@@ -32,6 +32,8 @@ public class UserController {
 
     private final OrderService orderService;
 
+    private final UserAddressesService userAddressesService;
+
     @GetMapping("/cart")
     public ResponseEntity<APISuccessResponse<ResponseGetCartItemsDto>> getCartItems(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
         String token = authorizationHeader.substring(7);
@@ -47,6 +49,14 @@ public class UserController {
         return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
     }
 
+    @PatchMapping("/save-for-later")
+    public ResponseEntity<APISuccessResponse<?>> updateCartItemSaveForLater(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody SaveForLaterDto saveForLaterDto) throws GenericException{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        cartService.saveForLater(user, saveForLaterDto);
+        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
+    }
+
     @GetMapping("/user-details")
     public ResponseEntity<APISuccessResponse<UserDetailsDto>> getUserDetails(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
         String token = authorizationHeader.substring(7);
@@ -58,10 +68,6 @@ public class UserController {
                 .lastName(userDetails.getLastName())
                 .phoneNumber(userDetails.getPhoneNumber())
                 .email(userDetails.getEmail())
-                .addressLine1(userDetails.getAddressLine1())
-                .addressLine2(userDetails.getAddressLine2())
-                .addressLine3(userDetails.getAddressLine3())
-                .pincode(userDetails.getPincode())
                 .build();
         return new ResponseEntity<>(APISuccessResponse.<UserDetailsDto>builder().data(userDetailsDto).build(), HttpStatus.OK);
     }
@@ -172,6 +178,49 @@ public class UserController {
         User user = userService.findUserByToken(token);
         orderService.placeSingleItemOrder(placeSingleOrderDto, user);
         return new ResponseEntity<>(APISuccessResponse.builder().build(), HttpStatus.OK);
+    }
+
+    @GetMapping("/address")
+    public ResponseEntity<APISuccessResponse<List<AddressDto>>> getUserAddresses(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        List<UserAddresses> userAddresses = userAddressesService.getAllAddressesOfUser(user);
+        List<AddressDto> userAddressesDto = new ArrayList<>();
+        for(UserAddresses address : userAddresses){
+            userAddressesDto.add(new AddressDto().builder()
+                            .id(address.getId())
+                            .addressLine1(address.getAddressLine1())
+                            .addressLine2(address.getAddressLine2())
+                            .addressLine3(address.getAddressLine3())
+                            .pincode(address.getPincode())
+                    .build());
+        }
+        return new ResponseEntity<>(APISuccessResponse.<List<AddressDto>>builder().data(userAddressesDto).build(),
+                HttpStatus.OK);
+    }
+
+    @PostMapping("/address")
+    public ResponseEntity<APISuccessResponse<?>> addNewAddress(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody SaveAddressDto saveAddressDto) throws GenericException {
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        userAddressesService.addNewAddress(user, saveAddressDto);
+        return new ResponseEntity<>(APISuccessResponse.builder().build(), HttpStatus.OK);
+    }
+
+    @PatchMapping("/address")
+    public ResponseEntity<APISuccessResponse<?>> updateExistingAddress(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody AddressDto addressDto) throws GenericException{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        userAddressesService.updateUserAddress(user, addressDto);
+        return new ResponseEntity<>(APISuccessResponse.builder().build(), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/address/{address_id}")
+    public ResponseEntity<APISuccessResponse<?>> deleteUserAddress(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("address_id") Long address_id) throws GenericException{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        userAddressesService.deleteUserAddress(user, address_id);
+        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
     }
 }
 

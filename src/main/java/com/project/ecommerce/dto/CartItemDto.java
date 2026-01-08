@@ -14,6 +14,8 @@ import java.util.List;
 @Builder
 public class CartItemDto {
 
+    private long id;
+
     private long variantId;
 
     private int quantity;

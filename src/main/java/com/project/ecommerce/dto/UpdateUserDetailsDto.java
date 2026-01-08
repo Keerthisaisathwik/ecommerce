@@ -14,8 +14,4 @@ public class UpdateUserDetailsDto {
     String lastName;
     String phoneNumber;
     String email;
-    String addressLine1;
-    String addressLine2;
-    String addressLine3;
-    String pincode;
 }

@@ -31,6 +31,6 @@ public class CartItem {
 
     private int quantity;
 
-    @Builder.Default
-    private Boolean saveForLater = false;
+    @Column(name = "save_for_later", nullable = false)
+    private boolean saveForLater = false;
 }
