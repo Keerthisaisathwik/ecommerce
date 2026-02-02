@@ -42,7 +42,7 @@ public class UserController {
     }
 
     @PostMapping("/cart")
-    public ResponseEntity<APISuccessResponse<?>> updateQuantity(@RequestBody UpdateCartItemQuantityDto updateCartItemQuantityDto, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException{
+    public ResponseEntity<APISuccessResponse<?>> updateCartItemsQuantity(@RequestBody UpdateCartItemQuantityDto updateCartItemQuantityDto, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
         cartService.setProductQuantity(user, updateCartItemQuantityDto);
@@ -226,6 +226,14 @@ public class UserController {
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
         userAddressesService.deleteUserAddress(user, address_id);
+        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
+    }
+
+    @PatchMapping("/cart/save-for-later")
+    public ResponseEntity<APISuccessResponse<?>> addToCartAndSaveForLater(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody AddToCartAndSaveForLaterDto addToCartAndSaveForLaterDto) throws GenericException{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        cartService.addToCartAndSaveForLater(user, addToCartAndSaveForLaterDto);
         return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
     }
 }

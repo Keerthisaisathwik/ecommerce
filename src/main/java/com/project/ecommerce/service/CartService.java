@@ -1,5 +1,6 @@
 package com.project.ecommerce.service;
 
+import com.project.ecommerce.dto.AddToCartAndSaveForLaterDto;
 import com.project.ecommerce.dto.ResponseGetCartItemsDto;
 import com.project.ecommerce.dto.SaveForLaterDto;
 import com.project.ecommerce.dto.UpdateCartItemQuantityDto;
@@ -18,4 +19,6 @@ public interface CartService {
     public ResponseGetCartItemsDto getCartDetails(User user);
 
     public void saveForLater(User user, SaveForLaterDto saveForLaterDto) throws GenericException;
+
+    public void addToCartAndSaveForLater(User user, AddToCartAndSaveForLaterDto addToCartAndSaveForLaterDto) throws GenericException;
 }

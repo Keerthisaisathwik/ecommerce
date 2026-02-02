@@ -136,4 +136,9 @@ public class StoreController {
         }).collect(Collectors.toList());
         return new ResponseEntity<>(APISuccessResponse.<Page<GetCategoryProductsDTO>>builder().data(new PageImpl<>(listOfProducts, pageable, products.getSize())).build(), HttpStatus.OK);
     }
+
+    @GetMapping("/sentry-test")
+    public String test() {
+        throw new RuntimeException("Sentry test error");
+    }
 }

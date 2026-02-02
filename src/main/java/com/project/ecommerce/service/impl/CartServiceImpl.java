@@ -1,9 +1,6 @@
 package com.project.ecommerce.service.impl;
 
-import com.project.ecommerce.dto.CartItemDto;
-import com.project.ecommerce.dto.ResponseGetCartItemsDto;
-import com.project.ecommerce.dto.SaveForLaterDto;
-import com.project.ecommerce.dto.UpdateCartItemQuantityDto;
+import com.project.ecommerce.dto.*;
 import com.project.ecommerce.entity.*;
 import com.project.ecommerce.exception.GenericException;
 import com.project.ecommerce.repository.*;
@@ -42,9 +39,7 @@ public class CartServiceImpl implements CartService {
                 .variantId(variantId)
                 .quantity(quantity)
                 .build();
-        Cart cart = user.getCart();
-        cart.getItems().add(newCartItem);
-        cartRepository.save(cart);
+        cartItemRepository.save(newCartItem);
     }
 
     @Override
@@ -118,5 +113,32 @@ public class CartServiceImpl implements CartService {
         }
         cartItem.setSaveForLater(saveForLaterDto.isSavedForLater());
         cartItemRepository.save(cartItem);
+    }
+
+    @Override
+    public void addToCartAndSaveForLater(User user, AddToCartAndSaveForLaterDto addToCartAndSaveForLaterDto) throws GenericException {
+        if(addToCartAndSaveForLaterDto.getQuantity() == 0){
+            return;
+        }
+        Cart cart = user.getCart();
+        CartItem cartItem = cart.getItems().stream().filter(item -> item.getVariantId() == addToCartAndSaveForLaterDto.getVariantId()).findFirst().orElse(null);
+        if (cartItem == null){
+            ProductVariant productVariant = productVariantRepository.findById(addToCartAndSaveForLaterDto.getVariantId()).orElse(null);
+            if(productVariant == null){
+                throw new GenericException("Product Variant not found");
+            }
+            CartItem newCartItem = CartItem.builder()
+                    .cart(user.getCart())
+                    .productId(productVariant.getProduct().getId())
+                    .variantId(addToCartAndSaveForLaterDto.getVariantId())
+                    .quantity(addToCartAndSaveForLaterDto.getQuantity())
+                    .saveForLater(true)
+                    .build();
+            cartItemRepository.save(newCartItem);
+        } else {
+            cartItem.setQuantity(addToCartAndSaveForLaterDto.getQuantity());
+            cartItem.setSaveForLater(true);
+            cartItemRepository.save(cartItem);
+        }
     }
 }
