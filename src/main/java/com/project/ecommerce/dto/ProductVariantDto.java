@@ -16,7 +16,7 @@ import java.util.List;
 @Builder
 public class ProductVariantDto {
 
-    private Long id;
+    private String variantAsin;
 
     private Double price;
 

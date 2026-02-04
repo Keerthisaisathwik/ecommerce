@@ -64,7 +64,7 @@ public class StoreController {
         List<ProductVariantDto> list = new ArrayList<>();
         for(ProductVariant variant : product.getProductVariants()){
             ProductVariantDto productVariantDto = ProductVariantDto.builder()
-                    .id(variant.getId())
+                    .variantAsin(variant.getVariantAsin())
                     .price(variant.getPrice())
                     .imageUrl(variant.getImageUrls().getFirst())
                     .isAvailable(variant.getIsAvailable())
