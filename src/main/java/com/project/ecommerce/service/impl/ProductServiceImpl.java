@@ -33,7 +33,6 @@ public class ProductServiceImpl implements ProductService {
                 .name(newProduct.getName())
                 .description(newProduct.getDescription())
                 .brand(newProduct.getBrand())
-                .slug(slug.generateUniqueSlug(newProduct.getName()))
                 .build();
         productRepository.save(product);
         ProductVariant productVariant = ProductVariant.builder()

@@ -73,7 +73,7 @@ public class StoreController {
             list.add(productVariantDto);
         }
         ProductDto productDto = ProductDto.builder()
-                .id(productVariant.getId())
+                .productVariantAsin(productVariant.getVariantAsin())
                 .category(product.getCategory())
                 .name(product.getName())
                 .description(product.getDescription())

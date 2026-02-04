@@ -45,9 +45,6 @@ public class Product {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    @Column(unique = true, nullable = false)
-    private String slug;
-
     @OneToMany(mappedBy = "product")
     @OrderBy("isAvailable DESC")
     private List<ProductVariant> productVariants;

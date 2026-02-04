@@ -24,6 +24,4 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     """)
     Page<Product> searchProducts(@Param("query") String query, Pageable pageable);
 
-    boolean existsBySlug(String slug);
-
 }
