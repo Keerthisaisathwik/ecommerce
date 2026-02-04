@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class GetCategoryProductsDTO {
 
-    private Long id;
+    private String variantAsin;
 
     private String imageUrl;
 

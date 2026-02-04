@@ -110,7 +110,7 @@ public class StoreController {
         List<GetCategoryProductsDTO> listOfProducts = products.stream().filter(product -> !product.getProductVariants().isEmpty()).map(product -> {
             ProductVariant defaultVariant = product.getProductVariants().getFirst();
             return GetCategoryProductsDTO.builder()
-                    .id(defaultVariant.getId())
+                    .variantAsin(defaultVariant.getVariantAsin())
                     .imageUrl(defaultVariant.getImageUrls().getFirst())
                     .title(product.getName())
                     .rating(product.getAverageRating())
@@ -127,7 +127,7 @@ public class StoreController {
         List<GetCategoryProductsDTO> listOfProducts = products.stream().map(product -> {
             ProductVariant defaultVariant = product.getProductVariants().getFirst();
             return GetCategoryProductsDTO.builder()
-                    .id(defaultVariant.getId())
+                    .variantAsin(defaultVariant.getVariantAsin())
                     .imageUrl(defaultVariant.getImageUrls().getFirst())
                     .title(product.getName())
                     .rating(product.getAverageRating())
