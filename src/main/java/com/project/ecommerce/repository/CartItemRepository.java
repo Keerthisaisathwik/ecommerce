@@ -23,10 +23,13 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
     @Modifying
     @Transactional
     @Query("""
-        DELETE FROM CartItem ci
-        WHERE ci.cart.id = :cartId
-        AND ci.variantId IN :variantIds
-    """)
-    void deleteByCartIdAndVariantIds(Long cartId, List<Long> variantIds);
+    DELETE FROM CartItem ci
+    WHERE ci.cart.id = :cartId
+      AND ci.variantAsin IN :variantAsins
+""")
+    void deleteByCartIdAndVariantAsins(
+            Long cartId,
+            List<String> variantAsins
+    );
 
 }

@@ -49,15 +49,15 @@ public class StoreController {
 
     private final OrderService orderService;
 
-    @GetMapping("/product/{id}")
-    public ResponseEntity<APISuccessResponse<ProductDto>> getProductByVariantId(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader, @PathVariable("id") Long id) throws GenericException {
+    @GetMapping("/product/{variant_asin}")
+    public ResponseEntity<APISuccessResponse<ProductDto>> getProductByVariantId(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader, @PathVariable("variant_asin") String variantAsin) throws GenericException {
         User user = null;
         CartItem cartItem = null;
         if(authorizationHeader != null){
             String token = authorizationHeader.substring(7);
             user = userService.findUserByToken(token);
         }
-        ProductVariant productVariant = productVariantRepository.findById(id).orElse(null);
+        ProductVariant productVariant = productVariantRepository.findByVariantAsin(variantAsin).orElse(null);
         if(productVariant == null)
             throw new GenericException("Given productVariant Id is not correct or does not exist");
         Product product = productVariant.getProduct();

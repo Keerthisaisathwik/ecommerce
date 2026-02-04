@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class RequestAddToWishlistDto {
-    private Long variantId;
+    private String variantAsin;
 }

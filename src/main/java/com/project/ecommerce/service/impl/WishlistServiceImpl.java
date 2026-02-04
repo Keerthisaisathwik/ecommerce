@@ -35,7 +35,7 @@ public class WishlistServiceImpl implements WishlistService {
                     ProductVariant productVariant = item.getProductVariant();
                     return WishListItemDto.builder()
                             .id(item.getId())
-                            .variantId(productVariant.getId())
+                            .variantAsin(productVariant.getVariantAsin())
                             .name(productVariant.getProduct().getName())
                             .description(productVariant.getProduct().getDescription())
                             .price(productVariant.getPrice())
@@ -50,10 +50,10 @@ public class WishlistServiceImpl implements WishlistService {
     }
 
     @Override
-    public void addToWishlist(User user, Long variantId) throws GenericException {
-        ProductVariant productVariant = productVariantRepository.findById(variantId).orElse(null);
+    public void addToWishlist(User user, String variantAsin) throws GenericException {
+        ProductVariant productVariant = productVariantRepository.findByVariantAsin(variantAsin).orElse(null);
         if(productVariant == null)
-            throw new GenericException("Variant Id : "+ variantId +" is not present in the database please recheck the variant Id");
+            throw new GenericException("Variant Id : "+ variantAsin +" is not present in the database please recheck the variant asin");
         if(wishlistRepository.findByUserAndProductVariant(user, productVariant).isPresent())
             return;
         Wishlist wishlist = new Wishlist();
@@ -64,10 +64,10 @@ public class WishlistServiceImpl implements WishlistService {
 
     @Transactional
     @Override
-    public void removeFromWishlist(User user, Long variantId) throws GenericException {
-        ProductVariant productVariant = productVariantRepository.findById(variantId).orElse(null);
+    public void removeFromWishlist(User user, String variantAsin) throws GenericException {
+        ProductVariant productVariant = productVariantRepository.findByVariantAsin(variantAsin).orElse(null);
         if(productVariant == null)
-            throw new GenericException("Variant Id : "+ variantId +" is not present in the database please recheck the variant Id");
+            throw new GenericException("Variant Id : "+ variantAsin +" is not present in the database please recheck the variant asin");
         wishlistRepository.deleteByUserAndProductVariant(user, productVariant);
     }
 

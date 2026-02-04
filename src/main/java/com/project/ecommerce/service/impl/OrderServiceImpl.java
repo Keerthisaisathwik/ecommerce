@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -74,30 +73,30 @@ public class OrderServiceImpl implements OrderService {
 
         orderRepository.save(order);
 
-        // 2️⃣ Collect variant IDs
-        List<Long> variantIds = cart.getListOfCartItems()
+        // 2️⃣ Collect variant ASINs
+        List<String> variantAsins = cart.getListOfCartItems()
                 .stream()
                 .filter(cartItemDto -> !cartItemDto.isSaveForLater())
-                .map(CartItemDto::getVariantId)
+                .map(CartItemDto::getVariantAsin)
                 .toList();
 
         // 3️⃣ Fetch variants in ONE query
-        List<ProductVariant> variants = productVariantRepository.findAllById(variantIds);
+        List<ProductVariant> variants = productVariantRepository.findAllByVariantAsinIn(variantAsins);
 
-        Map<Long, ProductVariant> variantMap = new HashMap<>();
+        Map<String, ProductVariant> variantMap = new HashMap<>();
 
         for (ProductVariant v : variants) {
-            variantMap.put(v.getId(), v);
+            variantMap.put(v.getVariantAsin(), v);
         }
 
         // 4️⃣ Create OrderItems
         List<OrderItem> orderItems = cart.getListOfCartItems().stream()
                 .filter(cartItemDto -> !cartItemDto.isSaveForLater())
                 .map(item -> {
-                    ProductVariant variant = variantMap.get(item.getVariantId());
+                    ProductVariant variant = variantMap.get(item.getVariantAsin());
 
                     if (variant == null) {
-                        throw new RuntimeException("Variant Id of "+ item.getVariantId() +" is missing");
+                        throw new RuntimeException("Variant Asin of "+ item.getVariantAsin() +" is missing");
                     }
                     Double tax = variant.getDiscountedPrice() * (variant.getTaxPercentage() / 100);
                     return OrderItem.builder()
@@ -115,7 +114,7 @@ public class OrderServiceImpl implements OrderService {
 
         // 5️⃣ Save all order items in one go
         orderItemRepository.saveAll(orderItems);
-        cartItemRepository.deleteByCartIdAndVariantIds(user.getCart().getId(), variantIds);
+        cartItemRepository.deleteByCartIdAndVariantAsins(user.getCart().getId(), variantAsins);
     }
 
     @Override
@@ -126,7 +125,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public void placeSingleItemOrder(PlaceSingleOrderDto placeSingleOrderDto, User user) throws GenericException{
-        ProductVariant productVariant = productVariantRepository.findById(placeSingleOrderDto.getVariantId()).orElseThrow(() -> new GenericException("Invalid product variant Id: "+ placeSingleOrderDto.getVariantId()));
+        ProductVariant productVariant = productVariantRepository.findByVariantAsin(placeSingleOrderDto.getVariantAsin()).orElseThrow(() -> new GenericException("Invalid product variant Asin: "+ placeSingleOrderDto.getVariantAsin()));
         Double tax = (double) Math.round(productVariant.getDiscountedPrice() * productVariant.getTaxPercentage())/100;
         Double shippingCharge = productVariant.getDiscountedPrice() >= 500 ? 0 : 40.0;
         Order order = Order.builder()

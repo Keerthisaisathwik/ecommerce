@@ -56,6 +56,9 @@ public class ProductVariant {
     @Builder.Default
     private Boolean isAvailable = true;
 
+    @Column(unique = true, nullable = false)
+    private String variantAsin;
+
     @PrePersist
     public void prePersist() {
         if (isAvailable == null) this.isAvailable = true;

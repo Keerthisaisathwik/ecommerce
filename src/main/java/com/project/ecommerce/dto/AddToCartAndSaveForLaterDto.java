@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class AddToCartAndSaveForLaterDto {
 
-    private long variantId;
+    private String variantAsin;
 
     private int quantity;
 }

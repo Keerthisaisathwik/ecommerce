@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class PlaceSingleOrderDto {
 
-    private Long variantId;
+    private String variantAsin;
 
     private PaymentMethod paymentMethod;
 

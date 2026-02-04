@@ -92,15 +92,15 @@ public class UserController {
     public ResponseEntity<APISuccessResponse<?>> updateUserWishlistProducts(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody RequestAddToWishlistDto requestAddToWishlistDto) throws GenericException{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
-        wishlistService.addToWishlist(user, requestAddToWishlistDto.getVariantId());
+        wishlistService.addToWishlist(user, requestAddToWishlistDto.getVariantAsin());
         return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
     }
 
-    @DeleteMapping("/wishlist/{variant_id}")
-    public ResponseEntity<APISuccessResponse<?>> removeProductFromWishlist(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("variant_id") Long variant_id) throws GenericException{
+    @DeleteMapping("/wishlist/{variant_asin}")
+    public ResponseEntity<APISuccessResponse<?>> removeProductFromWishlist(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("variant_asin") String variantAsin) throws GenericException{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
-        wishlistService.removeFromWishlist(user, variant_id);
+        wishlistService.removeFromWishlist(user, variantAsin);
         return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
     }
 

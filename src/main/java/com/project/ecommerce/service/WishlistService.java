@@ -10,9 +10,9 @@ import java.util.List;
 public interface WishlistService {
     List<WishListItemDto> getAllWishlistItems(User user);
 
-    void addToWishlist(User user, Long variantId) throws GenericException;
+    void addToWishlist(User user, String variantAsin) throws GenericException;
 
-    void removeFromWishlist(User user, Long variantId) throws GenericException;
+    void removeFromWishlist(User user, String variantAsin) throws GenericException;
 
     boolean existsByUserAndProductVariant(User user, ProductVariant productVariant);
 }

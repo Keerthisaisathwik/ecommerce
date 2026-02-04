@@ -26,5 +26,6 @@ public class ProductVariantDto {
 
     private Integer stockQuantity;
 
+    @Builder.Default
     private Boolean isAvailable = true;
 }

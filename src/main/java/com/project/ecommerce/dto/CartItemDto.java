@@ -16,7 +16,7 @@ public class CartItemDto {
 
     private long id;
 
-    private long variantId;
+    private String variantAsin;
 
     private int quantity;
 

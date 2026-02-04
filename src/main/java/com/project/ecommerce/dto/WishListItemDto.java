@@ -17,7 +17,7 @@ public class WishListItemDto {
 
     private long id;
 
-    private long variantId;
+    private String variantAsin;
 
     private String name;
 
