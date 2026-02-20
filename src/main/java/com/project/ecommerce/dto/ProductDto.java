@@ -6,6 +6,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,7 +26,8 @@ public class ProductDto {
 
     private String brand;
 
-    private Double price;
+    @Builder.Default
+    private BigDecimal price = BigDecimal.ZERO;
 
     private List<String> imageUrls;
 

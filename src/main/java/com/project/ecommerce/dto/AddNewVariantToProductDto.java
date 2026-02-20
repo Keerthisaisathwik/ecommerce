@@ -1,6 +1,5 @@
 package com.project.ecommerce.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,28 +12,22 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CartItemDto {
+public class AddNewVariantToProductDto {
 
-    private long id;
-
-    private String variantAsin;
-
-    private int quantity;
-
-    private String name;
-
-    private String description;
+    private Long productId;
 
     @Builder.Default
     private BigDecimal price = BigDecimal.ZERO;
 
     private List<String> imageUrls;
 
-    @JsonProperty("isAvailable")
-    private boolean isAvailable;
+    private Integer stockQuantity;
+
+    @Builder.Default
+    private BigDecimal taxPercentage = BigDecimal.ZERO;
 
     @Builder.Default
     private BigDecimal discountedPrice = BigDecimal.ZERO;
 
-    private boolean saveForLater;
+    private List<VariantAttributeRequestDto> variantAttributeList;
 }

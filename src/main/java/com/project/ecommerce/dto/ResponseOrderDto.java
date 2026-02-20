@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -27,15 +28,17 @@ public class ResponseOrderDto {
 
     private String paymentTransactionId;
 
-    private Double subtotal;
+    @Builder.Default
+    private BigDecimal discountedPrice = BigDecimal.ZERO;
 
-    private Double discountedPrice;
+    @Builder.Default
+    private BigDecimal shippingCharge = BigDecimal.ZERO;
 
-    private Double shippingCharge;
+    @Builder.Default
+    private BigDecimal tax = BigDecimal.ZERO;
 
-    private Double tax;
-
-    private Double totalAmount;
+    @Builder.Default
+    private BigDecimal totalAmount = BigDecimal.ZERO;
 
     private String shippingAddress;
 

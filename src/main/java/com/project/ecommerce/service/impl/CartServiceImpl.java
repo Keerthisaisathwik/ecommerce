@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -75,11 +76,11 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public ResponseGetCartItemsDto getCartDetails(User user) {
+    public ResponseGetCartItemsDto getCartDetails(User user) throws GenericException{
         ResponseGetCartItemsDto responseGetCartItemsDto = new ResponseGetCartItemsDto();
         List<CartItemDto> list = new ArrayList<>();
         for(CartItem cartItem : user.getCart().getItems()){
-            Product product = productRepository.findById(cartItem.getProductId()).orElse(null);
+            Product product = productRepository.findById(cartItem.getProductId()).orElseThrow(() -> new GenericException("product not found of Id: "+ cartItem.getProductId()));
             ProductVariant productVariant = product.getProductVariants().stream().filter(variant -> variant.getId() == cartItem.getVariantId()).findFirst().get();
             CartItemDto cartItemDto = CartItemDto.builder()
                     .id(cartItem.getId())
@@ -95,15 +96,18 @@ public class CartServiceImpl implements CartService {
                     .build();
             list.add(cartItemDto);
             if(!cartItem.isSaveForLater()){
-                responseGetCartItemsDto.setSubTotal(responseGetCartItemsDto.getSubTotal() + (cartItemDto.getQuantity() * productVariant.getPrice()));
-                responseGetCartItemsDto.setDiscountedPrice(responseGetCartItemsDto.getDiscountedPrice() + (cartItemDto.getQuantity() * productVariant.getDiscountedPrice()));
-                responseGetCartItemsDto.setTax(responseGetCartItemsDto.getTax() + (cartItemDto.getQuantity() * (productVariant.getDiscountedPrice() * (productVariant.getTaxPercentage() / 100))));
+                responseGetCartItemsDto.setWithoutDiscountPrice(responseGetCartItemsDto.getWithoutDiscountPrice().add(productVariant.getPrice().multiply(BigDecimal.valueOf(cartItemDto.getQuantity()))));
+                responseGetCartItemsDto.setDiscountedPrice(responseGetCartItemsDto.getDiscountedPrice().add(productVariant.getDiscountedPrice().multiply(BigDecimal.valueOf(cartItemDto.getQuantity()))));
+
             }
         }
         responseGetCartItemsDto.setListOfCartItems(list);
-        responseGetCartItemsDto.setTotalAmount(responseGetCartItemsDto.getDiscountedPrice()+responseGetCartItemsDto.getTax());
-        responseGetCartItemsDto.setShippingCharge(responseGetCartItemsDto.getTotalAmount() == 0 || responseGetCartItemsDto.getTotalAmount() >= 500 ? 0.0 : 40.0);
-        responseGetCartItemsDto.setTax(Math.round(responseGetCartItemsDto.getTax() * 100.0) / 100.0);
+
+        BigDecimal discountedPrice = responseGetCartItemsDto.getDiscountedPrice();
+        BigDecimal shippingCharge = discountedPrice.compareTo(BigDecimal.valueOf(500)) >= 0 ? BigDecimal.ZERO : BigDecimal.valueOf(40);
+
+        responseGetCartItemsDto.setShippingCharge(shippingCharge);
+        responseGetCartItemsDto.setTotalAmount(discountedPrice.add(shippingCharge));
         return responseGetCartItemsDto;
     }
 

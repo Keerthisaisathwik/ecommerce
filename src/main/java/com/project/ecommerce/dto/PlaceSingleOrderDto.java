@@ -14,6 +14,8 @@ public class PlaceSingleOrderDto {
 
     private String variantAsin;
 
+    private int quantity;
+
     private PaymentMethod paymentMethod;
 
     private String shippingAddress;

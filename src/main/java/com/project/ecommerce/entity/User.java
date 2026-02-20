@@ -4,9 +4,10 @@ import com.project.ecommerce.enums.AuthProviderType;
 import com.project.ecommerce.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -17,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class User implements UserDetails {
+public class User implements org.springframework.security.core.userdetails.UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,6 +50,14 @@ public class User implements UserDetails {
     @OneToOne
     @JoinColumn(name = "cart_id")
     private Cart cart;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    //to make sure userDetails gets deleted when the user is deleted (note: doesn't work on bulk deletes)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private UserDetails userDetails;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserAddresses> addresses = new ArrayList<>();

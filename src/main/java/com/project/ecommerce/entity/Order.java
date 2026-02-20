@@ -8,6 +8,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -48,20 +50,20 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
-    @Column(nullable = false)
-    private Double subtotal;
+//    @Column(nullable = false)
+//    private Double subtotal;
 
-    @Column(nullable = false)
-    private Double discountedPrice;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal discountedPrice;
 
-    @Column(nullable = false)
-    private Double shippingCharge;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal shippingCharge;
 
-    @Column(nullable = false)
-    private Double tax;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal tax;
 
-    @Column(nullable = false)
-    private Double totalAmount;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal totalAmount;
 
     @Column(nullable = false)
     private String shippingAddress;
@@ -72,6 +74,15 @@ public class Order {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @OneToMany(
+            mappedBy = "order",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private List<OrderItem> items = new ArrayList<>();
+
+
     private LocalDateTime paidAt;
     private LocalDateTime shippedAt;
     private LocalDateTime deliveredAt;
@@ -79,8 +90,16 @@ public class Order {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
-        this.paidAt = LocalDateTime.now();
-        this.shippedAt = LocalDateTime.now();
-        this.deliveredAt = LocalDateTime.now();
     }
+
+    public void addItem(OrderItem item) {
+        items.add(item);
+        item.setOrder(this);
+    }
+
+    public void removeItem(OrderItem item) {
+        items.remove(item);
+        item.setOrder(null);
+    }
+
 }

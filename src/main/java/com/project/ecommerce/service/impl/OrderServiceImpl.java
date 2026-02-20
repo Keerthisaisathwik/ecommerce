@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 @Service
@@ -44,77 +46,101 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order getOrderDetails(Long orderId) {
-        return orderRepository.findById(orderId).orElse(null);
+    public Order getOrderById(User user, Long orderId) throws GenericException{
+        Order order = orderRepository.findById(orderId).orElse(null);
+        if(order.getUser() != user){
+            throw new GenericException("You dont have permission to access users data");
+        }
+        return order;
     }
 
     @Transactional
     @Override
-    public void placeOrder(PlaceOrderDto placeOrderDto, User user){
+    public void placeOrder(PlaceOrderDto placeOrderDto, User user) throws GenericException{
 
         ResponseGetCartItemsDto cart = cartService.getCartDetails(user);
+        BigDecimal totalTax = BigDecimal.ZERO;
 
-        // 1️⃣ Create and save Order FIRST
+        // Step 1: Calculate tax details
+        for (CartItemDto item : cart.getListOfCartItems()) {
+
+            if (item.isSaveForLater()) continue;
+
+            ProductVariant variant = productVariantRepository.findByVariantAsin(item.getVariantAsin()).orElseThrow(() -> new GenericException("Invalid productAsin: "+ item.getVariantAsin()));
+
+            BigDecimal taxRate = variant.getTaxPercentage();
+            BigDecimal totalPricePerUnit = variant.getDiscountedPrice();
+            int quantity = item.getQuantity();
+
+//            BigDecimal basePricePerUnit = totalPricePerUnit / (1 + taxRate / 100);
+//            BigDecimal taxPerUnit = totalPricePerUnit - basePricePerUnit;
+//            totalTax += taxPerUnit * quantity;
+
+            BigDecimal multiplier = BigDecimal.ONE.add(taxRate.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP));
+            BigDecimal basePricePerUnit = totalPricePerUnit.divide(multiplier, 6, RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal taxPerUnit = totalPricePerUnit.subtract(basePricePerUnit).setScale(2, RoundingMode.HALF_UP);
+
+            totalTax = totalTax.add(taxPerUnit.multiply(BigDecimal.valueOf(quantity)).setScale(2, RoundingMode.HALF_UP));
+
+        }
+
+        // Step 2: Create and save Order FIRST
         Order order = Order.builder()
                 .user(user)
                 .orderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8))
-                .status(OrderStatus.DELIVERED)
+                .status(OrderStatus.PAYMENT_PENDING)
                 .paymentMethod(placeOrderDto.getPaymentMethod())
-                .paymentTransactionId("TXN-" + UUID.randomUUID().toString().substring(0, 10))
-                .paymentStatus(PaymentStatus.SUCCESS)
-                .subtotal(cart.getSubTotal())
+                .paymentTransactionId("")
+                .paymentStatus(PaymentStatus.PENDING)
                 .discountedPrice(cart.getDiscountedPrice())
                 .shippingCharge(cart.getShippingCharge())
-                .tax(cart.getTax())
+                .tax(totalTax)
                 .totalAmount(cart.getTotalAmount())
                 .shippingAddress(placeOrderDto.getShippingAddress())
                 .billingAddress(placeOrderDto.getBillingAddress())
                 .build();
-
         orderRepository.save(order);
 
-        // 2️⃣ Collect variant ASINs
-        List<String> variantAsins = cart.getListOfCartItems()
-                .stream()
-                .filter(cartItemDto -> !cartItemDto.isSaveForLater())
-                .map(CartItemDto::getVariantAsin)
-                .toList();
+        // Step 3: Create OrderItems
+        List<OrderItem> orderItems = new ArrayList<>();
 
-        // 3️⃣ Fetch variants in ONE query
-        List<ProductVariant> variants = productVariantRepository.findAllByVariantAsinIn(variantAsins);
+        for (CartItemDto item : cart.getListOfCartItems()) {
 
-        Map<String, ProductVariant> variantMap = new HashMap<>();
+            if (item.isSaveForLater()) continue;
 
-        for (ProductVariant v : variants) {
-            variantMap.put(v.getVariantAsin(), v);
+            ProductVariant variant = productVariantRepository.findByVariantAsin(item.getVariantAsin()).orElseThrow(() -> new GenericException("Invalid productAsin: "+ item.getVariantAsin()));
+
+            BigDecimal taxRate = variant.getTaxPercentage();
+            BigDecimal totalPricePerUnit = variant.getDiscountedPrice();
+            int quantity = item.getQuantity();
+
+//            BigDecimal basePricePerUnit = totalPricePerUnit / (1 + taxRate / 100);
+//            BigDecimal taxPerUnit = totalPricePerUnit - basePricePerUnit;
+            BigDecimal divisor = BigDecimal.ONE.add(taxRate.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP));
+            BigDecimal basePricePerUnit = totalPricePerUnit.divide(divisor, 6, RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal taxPerUnit = totalPricePerUnit.subtract(basePricePerUnit).setScale(2, RoundingMode.HALF_UP);
+
+            System.out.println("** "+basePricePerUnit + " - "+basePricePerUnit.multiply(BigDecimal.valueOf(quantity))+" - "+basePricePerUnit.multiply(BigDecimal.valueOf(quantity)).setScale(2, RoundingMode.HALF_UP));
+            OrderItem orderItem = OrderItem.builder()
+                    .order(order)
+                    .user(user)
+                    .productVariantId(variant.getId())
+                    .productName(variant.getProduct().getName() + "-"+ variant.getFormattedAttributesKey())
+                    .price(totalPricePerUnit)
+                    .unitPriceWithoutTax(basePricePerUnit)
+                    .taxPerUnit(taxPerUnit)
+                    .taxRate(taxRate)
+                    .quantity(quantity)
+                    .netAmount(basePricePerUnit.multiply(BigDecimal.valueOf(quantity)).setScale(2, RoundingMode.HALF_UP))
+                    .totalTaxAmount(taxPerUnit.multiply(BigDecimal.valueOf(quantity)).setScale(2, RoundingMode.HALF_UP))
+                    .totalAmount(totalPricePerUnit.multiply(BigDecimal.valueOf(quantity)).setScale(2, RoundingMode.HALF_UP))
+                    .build();
+
+            orderItems.add(orderItem);
         }
 
-        // 4️⃣ Create OrderItems
-        List<OrderItem> orderItems = cart.getListOfCartItems().stream()
-                .filter(cartItemDto -> !cartItemDto.isSaveForLater())
-                .map(item -> {
-                    ProductVariant variant = variantMap.get(item.getVariantAsin());
-
-                    if (variant == null) {
-                        throw new RuntimeException("Variant Asin of "+ item.getVariantAsin() +" is missing");
-                    }
-                    Double tax = variant.getDiscountedPrice() * (variant.getTaxPercentage() / 100);
-                    return OrderItem.builder()
-                            .order(order)
-                            .user(user)
-                            .price(variant.getDiscountedPrice())
-                            .tax(tax)
-                            .quantity(item.getQuantity())
-                            .productName(variant.getProduct().getName())
-                            .productVariantId(variant.getId())
-                            .totalPrice(variant.getDiscountedPrice() + tax)
-                            .build();
-                })
-                .toList();
-
-        // 5️⃣ Save all order items in one go
+        // Step 4: Save all order items in one go
         orderItemRepository.saveAll(orderItems);
-        cartItemRepository.deleteByCartIdAndVariantAsins(user.getCart().getId(), variantAsins);
     }
 
     @Override
@@ -126,20 +152,33 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void placeSingleItemOrder(PlaceSingleOrderDto placeSingleOrderDto, User user) throws GenericException{
         ProductVariant productVariant = productVariantRepository.findByVariantAsin(placeSingleOrderDto.getVariantAsin()).orElseThrow(() -> new GenericException("Invalid product variant Asin: "+ placeSingleOrderDto.getVariantAsin()));
-        Double tax = (double) Math.round(productVariant.getDiscountedPrice() * productVariant.getTaxPercentage())/100;
-        Double shippingCharge = productVariant.getDiscountedPrice() >= 500 ? 0 : 40.0;
+        // total price is discounted price, tax rate is already availabe, need to find tax price and base price of the product
+//        BigDecimal basePrice = productVariant.getDiscountedPrice() / (1 + productVariant.getTaxPercentage() / 100);
+//        BigDecimal taxPrice = productVariant.getDiscountedPrice() - basePrice;
+//        BigDecimal subTotal = productVariant.getDiscountedPrice() * placeSingleOrderDto.getQuantity();
+//        BigDecimal shippingCharge = productVariant.getDiscountedPrice() >= 500 ? 0 : 40.0;
+
+        BigDecimal taxRate = productVariant.getTaxPercentage();
+        BigDecimal totalPricePerUnit = productVariant.getDiscountedPrice();
+        int quantity = placeSingleOrderDto.getQuantity();
+
+        BigDecimal multiplier = BigDecimal.ONE.add(taxRate.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP));
+        BigDecimal basePricePerUnit = totalPricePerUnit.divide(multiplier, 6, RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal taxPerUnit = totalPricePerUnit.subtract(basePricePerUnit).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalAmount = totalPricePerUnit.multiply(BigDecimal.valueOf(quantity));
+        BigDecimal shippingCharge = totalAmount.compareTo(BigDecimal.valueOf(500)) >= 0 ? BigDecimal.ZERO : BigDecimal.valueOf(40);
+
         Order order = Order.builder()
                 .user(user)
                 .orderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8))
-                .status(OrderStatus.DELIVERED)
+                .status(OrderStatus.PAYMENT_PENDING)
                 .paymentMethod(placeSingleOrderDto.getPaymentMethod())
-                .paymentTransactionId("TXN-" + UUID.randomUUID().toString().substring(0, 10))
-                .paymentStatus(PaymentStatus.SUCCESS)
-                .subtotal(productVariant.getPrice())
+                .paymentTransactionId("")
+                .paymentStatus(PaymentStatus.PENDING)
                 .discountedPrice(productVariant.getDiscountedPrice())
                 .shippingCharge(shippingCharge)
-                .tax(tax)
-                .totalAmount(productVariant.getDiscountedPrice() + tax + shippingCharge)
+                .tax(taxPerUnit.multiply(BigDecimal.valueOf(quantity)))
+                .totalAmount(totalPricePerUnit.multiply(BigDecimal.valueOf(quantity)))
                 .shippingAddress(placeSingleOrderDto.getShippingAddress())
                 .billingAddress(placeSingleOrderDto.getBillingAddress())
                 .build();
@@ -149,12 +188,38 @@ public class OrderServiceImpl implements OrderService {
                 .order(order)
                 .user(user)
                 .productVariantId(productVariant.getId())
-                .productName(productVariant.getProduct().getName())
-                .price(order.getTotalAmount() - order.getTax())
-                .tax(order.getTax())
-                .quantity(1)
-                .totalPrice(order.getTotalAmount())
+                .productName(productVariant.getProduct().getName() + "-" + productVariant.getFormattedAttributesKey())
+                .price(productVariant.getDiscountedPrice())
+                .unitPriceWithoutTax(basePricePerUnit)
+                .taxPerUnit(taxPerUnit)
+                .taxRate(productVariant.getTaxPercentage())
+                .quantity(placeSingleOrderDto.getQuantity())
+                .netAmount(basePricePerUnit.multiply(BigDecimal.valueOf(quantity)))
+                .totalTaxAmount(taxPerUnit.multiply(BigDecimal.valueOf(quantity)))
+                .totalAmount(totalPricePerUnit.multiply(BigDecimal.valueOf(quantity)))
                 .build();
         orderItemRepository.save(orderItem);
+    }
+
+    @Override
+    public void payTheOder(User user, Long orderId) throws GenericException {
+        Order order = getOrderById(user, orderId);
+        if(order.getPaymentStatus() != PaymentStatus.PENDING || order.getStatus() != OrderStatus.PAYMENT_PENDING){
+            throw new GenericException("Invalid order state");
+        }
+        order.setPaymentStatus(PaymentStatus.SUCCESS);
+        order.setPaymentTransactionId("TXN-" + UUID.randomUUID().toString().substring(0, 10));
+        order.setStatus(OrderStatus.PAID);
+        orderRepository.save(order);
+    }
+
+    @Override
+    public void cancelTheOrder(User user, Long orderId) throws GenericException {
+        Order order = getOrderById(user, orderId);
+        if(order.getPaymentStatus() != PaymentStatus.PENDING || order.getStatus() != OrderStatus.PAYMENT_PENDING){
+            throw new GenericException("Invalid order state");
+        }
+        order.setPaymentStatus(PaymentStatus.FAILED);
+        orderRepository.save(order);
     }
 }

@@ -1,11 +1,10 @@
 package com.project.ecommerce.service;
 
-import com.project.ecommerce.dto.AddNewVariantToProduct;
+import com.project.ecommerce.dto.AddNewVariantToProductDto;
 import com.project.ecommerce.dto.SaveProductDto;
 import com.project.ecommerce.entity.Product;
 import com.project.ecommerce.exception.GenericException;
 
-import java.security.GeneralSecurityException;
 import java.util.Optional;
 
 public interface ProductService {
@@ -14,5 +13,5 @@ public interface ProductService {
 
     Optional<Product> getProductById(Long id);
 
-    void addVariant(AddNewVariantToProduct addNewVariantToProduct) throws GenericException;
+    void addVariant(AddNewVariantToProductDto addNewVariantToProductDto) throws GenericException;
 }

@@ -23,16 +23,5 @@ public class SaveProductDto {
 
     private String brand;
 
-    private Double price;
-
-    private List<String> imageUrls;
-
-    private Integer stockQuantity;
-
-    @Builder.Default
-    private Boolean isAvailable = true;
-
-    private Double taxPercentage;
-
-    private Double discountedPrice;
+    private List<SaveProductVariantDto> productVariants;
 }

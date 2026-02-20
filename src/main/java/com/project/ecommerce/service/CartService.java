@@ -16,7 +16,7 @@ public interface CartService {
 
     public int findSpecificCartItemQuantity(Long userId, Long variantId);
 
-    public ResponseGetCartItemsDto getCartDetails(User user);
+    public ResponseGetCartItemsDto getCartDetails(User user) throws GenericException;
 
     public void saveForLater(User user, SaveForLaterDto saveForLaterDto) throws GenericException;
 

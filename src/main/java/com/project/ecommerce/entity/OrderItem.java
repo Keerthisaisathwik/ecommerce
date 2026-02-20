@@ -3,6 +3,8 @@ package com.project.ecommerce.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Getter
 @Setter
@@ -42,14 +44,26 @@ public class OrderItem {
     private String productName;
 
     @Column(nullable = false)
-    private Double price;
+    private BigDecimal price;
 
     @Column(nullable = false)
-    private Double tax;
+    private BigDecimal unitPriceWithoutTax;
 
     @Column(nullable = false)
-    private Double totalPrice;
+    private BigDecimal taxPerUnit;
+
+    @Column(nullable = false)
+    private BigDecimal taxRate;
 
     @Column(nullable = false)
     private Integer quantity;
+
+    @Column(nullable = false)
+    private BigDecimal netAmount;
+
+    @Column(nullable = false)
+    private BigDecimal totalTaxAmount;
+
+    @Column(nullable = false)
+    private BigDecimal totalAmount;
 }

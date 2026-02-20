@@ -1,13 +1,7 @@
 package com.project.ecommerce.controller;
 
-import com.project.ecommerce.dto.APISuccessResponse;
-import com.project.ecommerce.dto.GetCategoryProductsDTO;
-import com.project.ecommerce.dto.ProductDto;
-import com.project.ecommerce.dto.ProductVariantDto;
-import com.project.ecommerce.entity.CartItem;
-import com.project.ecommerce.entity.Product;
-import com.project.ecommerce.entity.ProductVariant;
-import com.project.ecommerce.entity.User;
+import com.project.ecommerce.dto.*;
+import com.project.ecommerce.entity.*;
 import com.project.ecommerce.enums.CategoryType;
 import com.project.ecommerce.exception.GenericException;
 import com.project.ecommerce.repository.ProductRepository;
@@ -63,12 +57,21 @@ public class StoreController {
         Product product = productVariant.getProduct();
         List<ProductVariantDto> list = new ArrayList<>();
         for(ProductVariant variant : product.getProductVariants()){
+            List<VariantAttributeDto> variantAttributeDtoList = new ArrayList<>();
+            for(VariantAttribute newVariantAttribute : productVariant.getAttributes()){
+                VariantAttributeDto variantAttributeDto = VariantAttributeDto.builder()
+                        .attributeName(newVariantAttribute.getAttributeName())
+                        .attributeValue(newVariantAttribute.getAttributeValue())
+                        .build();
+                variantAttributeDtoList.add(variantAttributeDto);
+            }
             ProductVariantDto productVariantDto = ProductVariantDto.builder()
                     .variantAsin(variant.getVariantAsin())
                     .price(variant.getPrice())
                     .imageUrl(variant.getImageUrls().getFirst())
                     .isAvailable(variant.getIsAvailable())
                     .discountedPrice(variant.getDiscountedPrice())
+                    .variantAttributeList(variantAttributeDtoList)
                     .build();
             list.add(productVariantDto);
         }

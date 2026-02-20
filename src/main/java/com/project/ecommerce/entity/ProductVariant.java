@@ -8,8 +8,12 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -34,15 +38,15 @@ public class ProductVariant {
     private LocalDateTime updatedAt;
 
     @Column(nullable = false)
-    private Double price;
+    private BigDecimal price;
 
     @Column(nullable = false)
-    private Double discountedPrice;
+    private BigDecimal discountedPrice;
 
     @Column(nullable = false)
     @DecimalMin(value = "0.0", inclusive = false, message = "Tax must be greater than 0")
     @DecimalMax(value = "100.0", inclusive = false, message = "Tax must be less than 100")
-    private Double taxPercentage;
+    private BigDecimal taxPercentage;
 
     @ElementCollection
     @CollectionTable(name = "product_variant_images", joinColumns = @JoinColumn(name = "product_variant_id"))
@@ -59,6 +63,14 @@ public class ProductVariant {
     @Column(unique = true, nullable = false)
     private String variantAsin;
 
+    @OneToMany(
+            mappedBy = "variant",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @Builder.Default
+    private List<VariantAttribute> attributes = new ArrayList<>();
+
     @PrePersist
     public void prePersist() {
         if (isAvailable == null) this.isAvailable = true;
@@ -68,5 +80,22 @@ public class ProductVariant {
     @PreUpdate
     public void preUpdate() {
         if (stockQuantity != null) this.isAvailable = stockQuantity > 0;
+    }
+
+    public void addAttribute(VariantAttribute attribute) {
+        attributes.add(attribute);
+        attribute.setVariant(this);
+    }
+
+    public void removeAttribute(VariantAttribute attribute) {
+        attributes.remove(attribute);
+        attribute.setVariant(null);
+    }
+
+    public String getFormattedAttributesKey() {
+        return this.attributes.stream()
+                .sorted(Comparator.comparing(VariantAttribute::getAttributeName))
+                .map(attr -> attr.getAttributeName() + "=" + attr.getAttributeValue())
+                .collect(Collectors.joining("|"));
     }
 }

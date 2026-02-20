@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -15,13 +16,15 @@ public class ResponseGetCartItemsDto {
 
     private List<CartItemDto> listOfCartItems;
 
-    private double subTotal;
+    @Builder.Default
+    private BigDecimal withoutDiscountPrice = BigDecimal.ZERO;
 
-    private double discountedPrice;
+    @Builder.Default
+    private BigDecimal discountedPrice = BigDecimal.ZERO;
 
-    private double tax;
+    @Builder.Default
+    private BigDecimal shippingCharge = BigDecimal.ZERO;
 
-    private double shippingCharge;
-
-    private double totalAmount;
+    @Builder.Default
+    private BigDecimal totalAmount = BigDecimal.ZERO;
 }

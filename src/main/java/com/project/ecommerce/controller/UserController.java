@@ -7,6 +7,7 @@ import com.project.ecommerce.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,8 +35,10 @@ public class UserController {
 
     private final UserAddressesService userAddressesService;
 
+    private final InvoiceService invoiceService;
+
     @GetMapping("/cart")
-    public ResponseEntity<APISuccessResponse<ResponseGetCartItemsDto>> getCartItems(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
+    public ResponseEntity<APISuccessResponse<ResponseGetCartItemsDto>> getCartItems(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
         return new ResponseEntity<>(APISuccessResponse.<ResponseGetCartItemsDto>builder().data(cartService.getCartDetails(user)).build(), HttpStatus.OK);
@@ -116,7 +119,6 @@ public class UserController {
                     .paymentMethod(order.getPaymentMethod())
                     .paymentStatus(order.getPaymentStatus())
                     .paymentTransactionId(order.getPaymentTransactionId())
-                    .subtotal(order.getSubtotal())
                     .discountedPrice(order.getDiscountedPrice())
                     .shippingCharge(order.getShippingCharge())
                     .shippingAddress(order.getShippingAddress())
@@ -133,7 +135,7 @@ public class UserController {
     }
 
     @PostMapping("/order")
-    public ResponseEntity<APISuccessResponse<?>> placeAnOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody PlaceOrderDto placeOrderDto) {
+    public ResponseEntity<APISuccessResponse<?>> placeAnOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody PlaceOrderDto placeOrderDto) throws GenericException{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
         orderService.placeOrder(placeOrderDto, user);
@@ -144,7 +146,7 @@ public class UserController {
     public ResponseEntity<APISuccessResponse<ResponseOrderDto>> getOrderDetailById(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("order_id") Long id) throws GenericException{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
-        Order order = orderService.getOrderDetails(id);
+        Order order = orderService.getOrderById(user, id);
         if (order == null){
             throw new GenericException("Invalid order id");
         } else if(user != null && user.getId() != order.getUser().getId()){
@@ -157,7 +159,6 @@ public class UserController {
                 .paymentMethod(order.getPaymentMethod())
                 .paymentStatus(order.getPaymentStatus())
                 .paymentTransactionId(order.getPaymentTransactionId())
-                .subtotal(order.getSubtotal())
                 .discountedPrice(order.getDiscountedPrice())
                 .shippingCharge(order.getShippingCharge())
                 .shippingAddress(order.getShippingAddress())
@@ -178,6 +179,43 @@ public class UserController {
         User user = userService.findUserByToken(token);
         orderService.placeSingleItemOrder(placeSingleOrderDto, user);
         return new ResponseEntity<>(APISuccessResponse.builder().build(), HttpStatus.OK);
+    }
+
+    @GetMapping("order/{id}/invoice")
+    public ResponseEntity<byte[]> downloadInvoice(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable Long id) throws Exception {
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        Order order = orderService.getOrderById(user, id);
+        byte[] pdf = invoiceService.generateInvoice(order);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=invoice-" + order.getOrderNumber() + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .contentLength(pdf.length)
+                .body(pdf);
+    }
+
+    @PostMapping("/{order_id}/pay")
+    public ResponseEntity<byte[]> pay(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("order_id") Long id) throws Exception{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        orderService.payTheOder(user, id);
+        Order order = orderService.getOrderById(user, id);
+        byte[] pdf = invoiceService.generateInvoice(order);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=invoice-" + order.getOrderNumber() + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .contentLength(pdf.length)
+                .body(pdf);
+    }
+
+    @PostMapping("/{order_id}/cancel-payment")
+    public ResponseEntity<APISuccessResponse<?>> cancelPayment(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("order_id") Long id) throws GenericException{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        orderService.cancelTheOrder(user, id);
+        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
     }
 
     @GetMapping("/address")

@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -19,5 +21,6 @@ public class GetCategoryProductsDTO {
 
     private Double rating;
 
-    private Double price;
+    @Builder.Default
+    private BigDecimal price = BigDecimal.ZERO;
 }

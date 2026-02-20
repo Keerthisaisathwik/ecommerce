@@ -11,11 +11,15 @@ import java.util.List;
 public interface OrderService {
     public List<Order> getAllOrders(User user);
 
-    public Order getOrderDetails(Long orderId);
+    public Order getOrderById(User user, Long orderId) throws GenericException;
 
-    public void placeOrder(PlaceOrderDto placeOrderDto, User user);
+    public void placeOrder(PlaceOrderDto placeOrderDto, User user) throws GenericException;
 
-    Boolean isPreviouslyOrdered(Long id, User user);
+    public Boolean isPreviouslyOrdered(Long id, User user);
 
     public void placeSingleItemOrder(PlaceSingleOrderDto placeSingleOrderDto, User user) throws GenericException;
+
+    public void payTheOder(User user, Long orderId) throws GenericException;
+
+    public void cancelTheOrder(User user, Long orderId) throws GenericException;
 }

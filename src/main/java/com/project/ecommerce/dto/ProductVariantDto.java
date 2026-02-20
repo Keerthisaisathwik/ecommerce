@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,14 +19,18 @@ public class ProductVariantDto {
 
     private String variantAsin;
 
-    private Double price;
+    @Builder.Default
+    private BigDecimal price = BigDecimal.ZERO;
 
     private String imageUrl;
 
-    private Double discountedPrice;
+    @Builder.Default
+    private BigDecimal discountedPrice = BigDecimal.ZERO;
 
     private Integer stockQuantity;
 
     @Builder.Default
     private Boolean isAvailable = true;
+
+    private List<VariantAttributeDto> variantAttributeList;
 }
