@@ -1,6 +1,5 @@
 package com.project.ecommerce.service.impl;
 
-import com.project.ecommerce.dto.WishListItemDto;
 import com.project.ecommerce.entity.ProductVariant;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.entity.Wishlist;
@@ -28,24 +27,8 @@ public class WishlistServiceImpl implements WishlistService {
     private CartItemRepository cartItemRepository;
 
     @Override
-    public List<WishListItemDto> getAllWishlistItems(User user) {
-        List<WishListItemDto> wishlist = wishlistRepository.findByUser(user).stream()
-                .map((item) ->
-                {
-                    ProductVariant productVariant = item.getProductVariant();
-                    return WishListItemDto.builder()
-                            .id(item.getId())
-                            .variantAsin(productVariant.getVariantAsin())
-                            .name(productVariant.getProduct().getName())
-                            .description(productVariant.getProduct().getDescription())
-                            .price(productVariant.getPrice())
-                            .imageUrl(productVariant.getImageUrls().getFirst())
-                            .isAvailable(productVariant.getIsAvailable())
-                            .discountedPrice(productVariant.getDiscountedPrice())
-                            .addedAt(item.getAddedAt())
-                            .build();
-                }).toList();
-        System.out.println(wishlist);
+    public List<Wishlist> getAllWishlistItems(User user) {
+        List<Wishlist> wishlist = wishlistRepository.findByUser(user);
         return wishlist;
     }
 

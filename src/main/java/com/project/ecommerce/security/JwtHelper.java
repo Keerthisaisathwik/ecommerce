@@ -43,7 +43,16 @@ public class JwtHelper {
     }
 
     public boolean validateToken(String token) {
-        return !isTokenExpired(token);
+        if (token == null || token.trim().isEmpty()) {
+            return false;
+        }
+
+        try {
+            return !isTokenExpired(token);
+        } catch (Exception ex) {
+            // log if needed
+            return false;
+        }
     }
 
     public String extractEmail(String token) {

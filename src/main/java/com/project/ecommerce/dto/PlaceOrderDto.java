@@ -22,7 +22,7 @@ public class PlaceOrderDto {
 
     private PaymentMethod paymentMethod;
 
-    private String shippingAddress;
+    private String deliveryAddress;
 
     private String billingAddress;
 }

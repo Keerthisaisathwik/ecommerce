@@ -22,7 +22,8 @@ import java.util.List;
                 @Index(name = "idx_order_user", columnList = "user_id"),
                 @Index(name = "idx_order_status", columnList = "status"),
                 @Index(name = "idx_order_created", columnList = "createdAt"),
-                @Index(name = "idx_order_payment_status", columnList = "paymentStatus")
+                @Index(name = "idx_order_payment_status", columnList = "paymentStatus"),
+                @Index(name = "idx_order_payment_token", columnList = "paymentToken")
         })
 public class Order {
 
@@ -54,7 +55,7 @@ public class Order {
 //    private Double subtotal;
 
     @Column(nullable = false, precision = 15, scale = 2)
-    private BigDecimal discountedPrice;
+    private BigDecimal price;
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal shippingCharge;
@@ -66,13 +67,20 @@ public class Order {
     private BigDecimal totalAmount;
 
     @Column(nullable = false)
-    private String shippingAddress;
+    private String deliveryAddress;
 
     @Column(nullable = false)
     private String billingAddress;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    //Temporary cause I did not implement payment integeration need these two fields to verify my order
+    @Column(unique = true)
+    private String paymentToken;
+
+    @Column
+    private LocalDateTime paymentExpiryTime;
 
     @OneToMany(
             mappedBy = "order",

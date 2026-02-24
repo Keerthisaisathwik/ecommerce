@@ -6,19 +6,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class PlaceSingleOrderDto {
-
-    private String variantAsin;
-
-    private int quantity;
-
+public class PaymentDetailsDto {
     private PaymentMethod paymentMethod;
 
-    private String deliveryAddress;
+    private BigDecimal price;
 
-    private String billingAddress;
+    private String deliveryAddress;
 }

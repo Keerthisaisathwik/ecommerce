@@ -25,4 +25,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             AND o.createdAt <= :expiryTime
             """)
     int cancelExpiredOrders(@Param("expiryTime") LocalDateTime expiryTime);
+
+    Optional<Order> findByUserAndPaymentToken(User user, String paymentMethod);
 }

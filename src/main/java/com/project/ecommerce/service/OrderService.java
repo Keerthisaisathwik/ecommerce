@@ -13,13 +13,17 @@ public interface OrderService {
 
     public Order getOrderById(User user, Long orderId) throws GenericException;
 
-    public void placeOrder(PlaceOrderDto placeOrderDto, User user) throws GenericException;
+    public String placeOrder(PlaceOrderDto placeOrderDto, User user) throws GenericException;
 
     public Boolean isPreviouslyOrdered(Long id, User user);
 
-    public void placeSingleItemOrder(PlaceSingleOrderDto placeSingleOrderDto, User user) throws GenericException;
+    public String placeSingleItemOrder(PlaceSingleOrderDto placeSingleOrderDto, User user) throws GenericException;
 
-    public void payTheOder(User user, Long orderId) throws GenericException;
+    public Order payTheOder(User user, String paymentToken) throws GenericException;
 
-    public void cancelTheOrder(User user, Long orderId) throws GenericException;
+    public void cancelTheOrder(User user, String paymentToken) throws GenericException;
+
+    public Order getPaymentDetails(User user, String paymentToken) throws GenericException;
+
+    public int cancelExpiredOrders();
 }

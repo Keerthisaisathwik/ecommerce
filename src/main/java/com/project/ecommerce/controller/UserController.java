@@ -87,7 +87,22 @@ public class UserController {
     public ResponseEntity<APISuccessResponse<?>> getUserWishlistProducts(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
-        List<WishListItemDto> wishlist = wishlistService.getAllWishlistItems(user);
+        List<WishListItemDto> wishlist = wishlistService.getAllWishlistItems(user).stream()
+                .map((item) ->
+                {
+                    ProductVariant productVariant = item.getProductVariant();
+                    return WishListItemDto.builder()
+                            .id(item.getId())
+                            .variantAsin(productVariant.getVariantAsin())
+                            .name(productVariant.getProduct().getName())
+                            .description(productVariant.getProduct().getDescription())
+                            .price(productVariant.getPrice())
+                            .imageUrl(productVariant.getImageUrls().getFirst())
+                            .isAvailable(productVariant.getIsAvailable())
+                            .discountedPrice(productVariant.getDiscountedPrice())
+                            .addedAt(item.getAddedAt())
+                            .build();
+                }).toList();
         return new ResponseEntity<>(APISuccessResponse.<List<WishListItemDto>>builder().data(wishlist).build(), HttpStatus.OK);
     }
 
@@ -119,9 +134,9 @@ public class UserController {
                     .paymentMethod(order.getPaymentMethod())
                     .paymentStatus(order.getPaymentStatus())
                     .paymentTransactionId(order.getPaymentTransactionId())
-                    .discountedPrice(order.getDiscountedPrice())
+                    .price(order.getPrice())
                     .shippingCharge(order.getShippingCharge())
-                    .shippingAddress(order.getShippingAddress())
+                    .deliveryAddress(order.getDeliveryAddress())
                     .billingAddress(order.getBillingAddress())
                     .createdAt(order.getCreatedAt())
                     .paidAt(order.getPaidAt())
@@ -135,11 +150,11 @@ public class UserController {
     }
 
     @PostMapping("/order")
-    public ResponseEntity<APISuccessResponse<?>> placeAnOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody PlaceOrderDto placeOrderDto) throws GenericException{
+    public ResponseEntity<APISuccessResponse<OrderPlacedResponseDto>> placeAnOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody PlaceOrderDto placeOrderDto) throws GenericException{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
-        orderService.placeOrder(placeOrderDto, user);
-        return new ResponseEntity<>(APISuccessResponse.builder().build(), HttpStatus.OK);
+        String paymentToken = orderService.placeOrder(placeOrderDto, user);
+        return new ResponseEntity<>(APISuccessResponse.<OrderPlacedResponseDto>builder().data(OrderPlacedResponseDto.builder().paymentToken(paymentToken).build()).build(), HttpStatus.OK);
     }
 
     @GetMapping("/order/{order_id}")
@@ -159,9 +174,9 @@ public class UserController {
                 .paymentMethod(order.getPaymentMethod())
                 .paymentStatus(order.getPaymentStatus())
                 .paymentTransactionId(order.getPaymentTransactionId())
-                .discountedPrice(order.getDiscountedPrice())
+                .price(order.getPrice())
                 .shippingCharge(order.getShippingCharge())
-                .shippingAddress(order.getShippingAddress())
+                .deliveryAddress(order.getDeliveryAddress())
                 .billingAddress(order.getBillingAddress())
                 .createdAt(order.getCreatedAt())
                 .paidAt(order.getPaidAt())
@@ -174,11 +189,11 @@ public class UserController {
     }
 
     @PostMapping("/single-order")
-    public ResponseEntity<APISuccessResponse<?>> placeAnSingleItemOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody PlaceSingleOrderDto placeSingleOrderDto) throws GenericException {
+    public ResponseEntity<APISuccessResponse<OrderPlacedResponseDto>> placeAnSingleItemOrder(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody PlaceSingleOrderDto placeSingleOrderDto) throws GenericException {
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
-        orderService.placeSingleItemOrder(placeSingleOrderDto, user);
-        return new ResponseEntity<>(APISuccessResponse.builder().build(), HttpStatus.OK);
+        String paymentToken = orderService.placeSingleItemOrder(placeSingleOrderDto, user);
+        return new ResponseEntity<>(APISuccessResponse.<OrderPlacedResponseDto>builder().data(OrderPlacedResponseDto.builder().paymentToken(paymentToken).build()).build(), HttpStatus.OK);
     }
 
     @GetMapping("order/{id}/invoice")
@@ -195,12 +210,11 @@ public class UserController {
                 .body(pdf);
     }
 
-    @PostMapping("/{order_id}/pay")
-    public ResponseEntity<byte[]> pay(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("order_id") Long id) throws Exception{
+    @PostMapping("/{payment_token}/pay")
+    public ResponseEntity<byte[]> pay(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("payment_token") String paymentToken) throws Exception{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
-        orderService.payTheOder(user, id);
-        Order order = orderService.getOrderById(user, id);
+        Order order = orderService.payTheOder(user, paymentToken);
         byte[] pdf = invoiceService.generateInvoice(order);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -210,12 +224,25 @@ public class UserController {
                 .body(pdf);
     }
 
-    @PostMapping("/{order_id}/cancel-payment")
-    public ResponseEntity<APISuccessResponse<?>> cancelPayment(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("order_id") Long id) throws GenericException{
+    @PostMapping("/{payment_token}/cancel-payment")
+    public ResponseEntity<APISuccessResponse<?>> cancelPayment(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("payment_token") String paymentToken) throws GenericException{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
-        orderService.cancelTheOrder(user, id);
+        orderService.cancelTheOrder(user, paymentToken);
         return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
+    }
+
+    @GetMapping("/get-payment-details/{payment-token}")
+    public ResponseEntity<APISuccessResponse<PaymentDetailsDto>> getPaymentDetails(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("payment-token") String paymentToken) throws GenericException{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        Order order = orderService.getPaymentDetails(user, paymentToken);
+        PaymentDetailsDto paymentDetailsDto = PaymentDetailsDto.builder()
+                .deliveryAddress(order.getDeliveryAddress())
+                .paymentMethod(order.getPaymentMethod())
+                .price(order.getPrice())
+                .build();
+        return new ResponseEntity<>(APISuccessResponse.<PaymentDetailsDto>builder().data(paymentDetailsDto).build(), HttpStatus.OK);
     }
 
     @GetMapping("/address")

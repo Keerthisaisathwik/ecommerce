@@ -25,4 +25,8 @@ public class UserService {
         String username = jwtHelper.getUsernameByToken(token);
         return userRepository.findByUsername(username).orElse(null);
     }
+
+    public boolean validateJwtToken(String token){
+        return jwtHelper.validateToken(token);
+    }
 }

@@ -29,7 +29,7 @@ public class ResponseOrderDto {
     private String paymentTransactionId;
 
     @Builder.Default
-    private BigDecimal discountedPrice = BigDecimal.ZERO;
+    private BigDecimal price = BigDecimal.ZERO;
 
     @Builder.Default
     private BigDecimal shippingCharge = BigDecimal.ZERO;
@@ -40,7 +40,7 @@ public class ResponseOrderDto {
     @Builder.Default
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
-    private String shippingAddress;
+    private String deliveryAddress;
 
     private String billingAddress;
 

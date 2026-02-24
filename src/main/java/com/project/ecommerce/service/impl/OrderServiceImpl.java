@@ -12,11 +12,13 @@ import com.project.ecommerce.repository.*;
 import com.project.ecommerce.service.CartService;
 import com.project.ecommerce.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -40,6 +42,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private CartItemRepository cartItemRepository;
 
+    @Value("${order.cancellation.minutes}")
+    private int cancellationMinutes;
+
     @Override
     public List<Order> getAllOrders(User user) {
         return orderRepository.findByUser(user).orElse(Collections.emptyList());
@@ -56,7 +61,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public void placeOrder(PlaceOrderDto placeOrderDto, User user) throws GenericException{
+    public String placeOrder(PlaceOrderDto placeOrderDto, User user) throws GenericException{
 
         ResponseGetCartItemsDto cart = cartService.getCartDetails(user);
         BigDecimal totalTax = BigDecimal.ZERO;
@@ -85,6 +90,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // Step 2: Create and save Order FIRST
+        String paymentToken = UUID.randomUUID().toString().replace("-", "").substring(0,9);
         Order order = Order.builder()
                 .user(user)
                 .orderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8))
@@ -92,12 +98,14 @@ public class OrderServiceImpl implements OrderService {
                 .paymentMethod(placeOrderDto.getPaymentMethod())
                 .paymentTransactionId("")
                 .paymentStatus(PaymentStatus.PENDING)
-                .discountedPrice(cart.getDiscountedPrice())
+                .price(cart.getDiscountedPrice())
                 .shippingCharge(cart.getShippingCharge())
                 .tax(totalTax)
                 .totalAmount(cart.getTotalAmount())
-                .shippingAddress(placeOrderDto.getShippingAddress())
+                .deliveryAddress(placeOrderDto.getDeliveryAddress())
                 .billingAddress(placeOrderDto.getBillingAddress())
+                .paymentToken(paymentToken)
+                .paymentExpiryTime(LocalDateTime.now().plusMinutes(cancellationMinutes))
                 .build();
         orderRepository.save(order);
 
@@ -141,6 +149,7 @@ public class OrderServiceImpl implements OrderService {
 
         // Step 4: Save all order items in one go
         orderItemRepository.saveAll(orderItems);
+        return paymentToken;
     }
 
     @Override
@@ -150,7 +159,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public void placeSingleItemOrder(PlaceSingleOrderDto placeSingleOrderDto, User user) throws GenericException{
+    public String placeSingleItemOrder(PlaceSingleOrderDto placeSingleOrderDto, User user) throws GenericException{
         ProductVariant productVariant = productVariantRepository.findByVariantAsin(placeSingleOrderDto.getVariantAsin()).orElseThrow(() -> new GenericException("Invalid product variant Asin: "+ placeSingleOrderDto.getVariantAsin()));
         // total price is discounted price, tax rate is already availabe, need to find tax price and base price of the product
 //        BigDecimal basePrice = productVariant.getDiscountedPrice() / (1 + productVariant.getTaxPercentage() / 100);
@@ -168,6 +177,7 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal totalAmount = totalPricePerUnit.multiply(BigDecimal.valueOf(quantity));
         BigDecimal shippingCharge = totalAmount.compareTo(BigDecimal.valueOf(500)) >= 0 ? BigDecimal.ZERO : BigDecimal.valueOf(40);
 
+        String paymentToken = UUID.randomUUID().toString().replace("-", "").substring(0,9);
         Order order = Order.builder()
                 .user(user)
                 .orderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8))
@@ -175,12 +185,14 @@ public class OrderServiceImpl implements OrderService {
                 .paymentMethod(placeSingleOrderDto.getPaymentMethod())
                 .paymentTransactionId("")
                 .paymentStatus(PaymentStatus.PENDING)
-                .discountedPrice(productVariant.getDiscountedPrice())
+                .price(productVariant.getDiscountedPrice())
                 .shippingCharge(shippingCharge)
                 .tax(taxPerUnit.multiply(BigDecimal.valueOf(quantity)))
                 .totalAmount(totalPricePerUnit.multiply(BigDecimal.valueOf(quantity)))
-                .shippingAddress(placeSingleOrderDto.getShippingAddress())
+                .deliveryAddress(placeSingleOrderDto.getDeliveryAddress())
                 .billingAddress(placeSingleOrderDto.getBillingAddress())
+                .paymentToken(paymentToken)
+                .paymentExpiryTime(LocalDateTime.now().plusMinutes(cancellationMinutes))
                 .build();
         orderRepository.save(order);
 
@@ -199,11 +211,13 @@ public class OrderServiceImpl implements OrderService {
                 .totalAmount(totalPricePerUnit.multiply(BigDecimal.valueOf(quantity)))
                 .build();
         orderItemRepository.save(orderItem);
+
+        return paymentToken;
     }
 
     @Override
-    public void payTheOder(User user, Long orderId) throws GenericException {
-        Order order = getOrderById(user, orderId);
+    public Order payTheOder(User user, String paymentToken) throws GenericException {
+        Order order = getPaymentDetails(user, paymentToken);
         if(order.getPaymentStatus() != PaymentStatus.PENDING || order.getStatus() != OrderStatus.PAYMENT_PENDING){
             throw new GenericException("Invalid order state");
         }
@@ -211,15 +225,31 @@ public class OrderServiceImpl implements OrderService {
         order.setPaymentTransactionId("TXN-" + UUID.randomUUID().toString().substring(0, 10));
         order.setStatus(OrderStatus.PAID);
         orderRepository.save(order);
+        return order;
     }
 
     @Override
-    public void cancelTheOrder(User user, Long orderId) throws GenericException {
-        Order order = getOrderById(user, orderId);
+    public void cancelTheOrder(User user, String paymentToken) throws GenericException {
+        Order order = getPaymentDetails(user, paymentToken);
         if(order.getPaymentStatus() != PaymentStatus.PENDING || order.getStatus() != OrderStatus.PAYMENT_PENDING){
             throw new GenericException("Invalid order state");
         }
         order.setPaymentStatus(PaymentStatus.FAILED);
         orderRepository.save(order);
+    }
+
+    @Override
+    public Order getPaymentDetails(User user, String paymentToken) throws GenericException {
+        Order order = orderRepository.findByUserAndPaymentToken(user, paymentToken).orElseThrow(() -> new GenericException("Invalid payment token"));
+        if(order.getPaymentExpiryTime().isBefore(LocalDateTime.now())){
+            throw new GenericException("This Token has expired");
+        }
+        return order;
+    }
+
+    @Override
+    public int cancelExpiredOrders() {
+        LocalDateTime expiryTime = LocalDateTime.now().minusMinutes(cancellationMinutes);
+        return orderRepository.cancelExpiredOrders(expiryTime);
     }
 }

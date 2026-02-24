@@ -46,10 +46,11 @@ public class StoreController {
     @GetMapping("/product/{variant_asin}")
     public ResponseEntity<APISuccessResponse<ProductDto>> getProductByVariantId(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader, @PathVariable("variant_asin") String variantAsin) throws GenericException {
         User user = null;
-        CartItem cartItem = null;
         if(authorizationHeader != null){
             String token = authorizationHeader.substring(7);
-            user = userService.findUserByToken(token);
+            if(userService.validateJwtToken(token)){
+                user = userService.findUserByToken(token);
+            }
         }
         ProductVariant productVariant = productVariantRepository.findByVariantAsin(variantAsin).orElse(null);
         if(productVariant == null)

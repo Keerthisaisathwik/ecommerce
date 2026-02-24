@@ -56,8 +56,8 @@ public class InvoiceService {
         document.add(billing);
 
         Paragraph shipping = new Paragraph();
-        shipping.add(new Phrase("Shipping Address: ", boldFont));
-        shipping.add(new Phrase(order.getShippingAddress(), normalFont));
+        shipping.add(new Phrase("Delivery Address: ", boldFont));
+        shipping.add(new Phrase(order.getDeliveryAddress(), normalFont));
         document.add(shipping);
 
         if (order.getDeliveredAt() != null) {
