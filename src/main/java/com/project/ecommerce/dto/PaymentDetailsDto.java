@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Data
@@ -20,5 +21,5 @@ public class PaymentDetailsDto {
 
     private String deliveryAddress;
 
-    private Long paymentExpiresAt;
+    private Instant paymentExpiresAt;
 }

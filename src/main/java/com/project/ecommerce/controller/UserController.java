@@ -242,7 +242,7 @@ public class UserController {
                 .deliveryAddress(order.getDeliveryAddress())
                 .paymentMethod(order.getPaymentMethod())
                 .price(order.getPrice())
-                .paymentExpiresAt(order.getPaymentExpiryTime().toInstant(ZoneOffset.UTC).toEpochMilli())
+                .paymentExpiresAt(order.getPaymentExpiryTime())
                 .build();
         return new ResponseEntity<>(APISuccessResponse.<PaymentDetailsDto>builder().data(paymentDetailsDto).build(), HttpStatus.OK);
     }

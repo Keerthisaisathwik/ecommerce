@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,7 +81,7 @@ public class Order {
     private String paymentToken;
 
     @Column
-    private LocalDateTime paymentExpiryTime;
+    private Instant paymentExpiryTime;
 
     @OneToMany(
             mappedBy = "order",

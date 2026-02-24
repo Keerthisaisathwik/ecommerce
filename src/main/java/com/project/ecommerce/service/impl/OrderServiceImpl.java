@@ -18,7 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -105,7 +107,7 @@ public class OrderServiceImpl implements OrderService {
                 .deliveryAddress(placeOrderDto.getDeliveryAddress())
                 .billingAddress(placeOrderDto.getBillingAddress())
                 .paymentToken(paymentToken)
-                .paymentExpiryTime(LocalDateTime.now().plusMinutes(cancellationMinutes))
+                .paymentExpiryTime(Instant.now().plus(cancellationMinutes, ChronoUnit.MINUTES))
                 .build();
         orderRepository.save(order);
 
@@ -192,7 +194,7 @@ public class OrderServiceImpl implements OrderService {
                 .deliveryAddress(placeSingleOrderDto.getDeliveryAddress())
                 .billingAddress(placeSingleOrderDto.getBillingAddress())
                 .paymentToken(paymentToken)
-                .paymentExpiryTime(LocalDateTime.now().plusMinutes(cancellationMinutes))
+                .paymentExpiryTime(Instant.now().plus(cancellationMinutes, ChronoUnit.MINUTES))
                 .build();
         orderRepository.save(order);
 
@@ -241,7 +243,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order getPaymentDetails(User user, String paymentToken) throws GenericException {
         Order order = orderRepository.findByUserAndPaymentToken(user, paymentToken).orElseThrow(() -> new GenericException("Invalid payment token"));
-        if(order.getPaymentExpiryTime().isBefore(LocalDateTime.now())){
+        if(Instant.now().isAfter(order.getPaymentExpiryTime())){
             throw new GenericException("This Token has expired");
         }
         return order;
