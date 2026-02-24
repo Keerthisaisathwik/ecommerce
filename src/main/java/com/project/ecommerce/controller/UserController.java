@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -241,6 +242,7 @@ public class UserController {
                 .deliveryAddress(order.getDeliveryAddress())
                 .paymentMethod(order.getPaymentMethod())
                 .price(order.getPrice())
+                .paymentExpiresAt(order.getPaymentExpiryTime().toInstant(ZoneOffset.UTC).toEpochMilli())
                 .build();
         return new ResponseEntity<>(APISuccessResponse.<PaymentDetailsDto>builder().data(paymentDetailsDto).build(), HttpStatus.OK);
     }
