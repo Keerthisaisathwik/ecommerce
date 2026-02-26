@@ -27,4 +27,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     int cancelExpiredOrders(@Param("expiryTime") LocalDateTime expiryTime);
 
     Optional<Order> findByUserAndPaymentToken(User user, String paymentMethod);
+
+    Optional<Order> findByOrderNumber(String orderNumber);
 }

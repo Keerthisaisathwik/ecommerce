@@ -197,11 +197,11 @@ public class UserController {
         return new ResponseEntity<>(APISuccessResponse.<OrderPlacedResponseDto>builder().data(OrderPlacedResponseDto.builder().paymentToken(paymentToken).build()).build(), HttpStatus.OK);
     }
 
-    @GetMapping("order/{id}/invoice")
-    public ResponseEntity<byte[]> downloadInvoice(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable Long id) throws Exception {
+    @GetMapping("/order/{order-id}/invoice")
+    public ResponseEntity<byte[]> downloadInvoice(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("order-id") String orderId) throws Exception {
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
-        Order order = orderService.getOrderById(user, id);
+        Order order = orderService.getOrderByOrderNumber(user, orderId);
         byte[] pdf = invoiceService.generateInvoice(order);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -212,17 +212,12 @@ public class UserController {
     }
 
     @PostMapping("/{payment_token}/pay")
-    public ResponseEntity<byte[]> pay(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("payment_token") String paymentToken) throws Exception{
+    public ResponseEntity<APISuccessResponse<PaymentSuccessfulDto>> pay(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("payment_token") String paymentToken) throws Exception{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
         Order order = orderService.payTheOder(user, paymentToken);
-        byte[] pdf = invoiceService.generateInvoice(order);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=invoice-" + order.getOrderNumber() + ".pdf")
-                .contentType(MediaType.APPLICATION_PDF)
-                .contentLength(pdf.length)
-                .body(pdf);
+        PaymentSuccessfulDto paymentSuccessfulDto = PaymentSuccessfulDto.builder().orderId(order.getOrderNumber()).build();
+        return new ResponseEntity<>(APISuccessResponse.<PaymentSuccessfulDto>builder().data(paymentSuccessfulDto).build(), HttpStatus.OK);
     }
 
     @PostMapping("/{payment_token}/cancel-payment")

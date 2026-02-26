@@ -26,4 +26,6 @@ public interface OrderService {
     public Order getPaymentDetails(User user, String paymentToken) throws GenericException;
 
     public int cancelExpiredOrders();
+
+    public Order getOrderByOrderNumber(User user, String orderNumber) throws GenericException;
 }

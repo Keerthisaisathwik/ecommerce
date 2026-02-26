@@ -182,7 +182,7 @@ public class OrderServiceImpl implements OrderService {
         String paymentToken = UUID.randomUUID().toString().replace("-", "").substring(0,9);
         Order order = Order.builder()
                 .user(user)
-                .orderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8))
+                .orderNumber("ORD_" + UUID.randomUUID().toString().replace("-","").substring(0, 8))
                 .status(OrderStatus.PAYMENT_PENDING)
                 .paymentMethod(placeSingleOrderDto.getPaymentMethod())
                 .paymentTransactionId("")
@@ -253,5 +253,14 @@ public class OrderServiceImpl implements OrderService {
     public int cancelExpiredOrders() {
         LocalDateTime expiryTime = LocalDateTime.now().minusMinutes(cancellationMinutes);
         return orderRepository.cancelExpiredOrders(expiryTime);
+    }
+
+    @Override
+    public Order getOrderByOrderNumber(User user, String orderNumber) throws GenericException {
+        Order order = orderRepository.findByOrderNumber(orderNumber).orElseThrow(() -> new GenericException("Invalid OrderId"));
+        if(order.getUser() != user){
+            throw new GenericException("You dont have permission to access users data");
+        }
+        return order;
     }
 }
