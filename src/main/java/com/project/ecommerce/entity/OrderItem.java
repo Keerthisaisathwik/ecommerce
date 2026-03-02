@@ -20,6 +20,7 @@ import java.math.BigDecimal;
                 )
         },
         indexes = {
+                @Index(name = "idx_orderitem_variant_user", columnList = "product_variant_id, user_id"),
                 @Index(name = "idx_orderitem_order_user", columnList = "order_id, user_id")
         }
 )

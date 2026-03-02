@@ -4,6 +4,7 @@ import com.project.ecommerce.dto.PlaceOrderDto;
 import com.project.ecommerce.dto.PlaceSingleOrderDto;
 import com.project.ecommerce.entity.Order;
 import com.project.ecommerce.entity.User;
+import com.project.ecommerce.enums.OrderStatus;
 import com.project.ecommerce.exception.GenericException;
 
 import java.util.List;
@@ -15,7 +16,7 @@ public interface OrderService {
 
     public String placeOrder(PlaceOrderDto placeOrderDto, User user) throws GenericException;
 
-    public Boolean isPreviouslyOrdered(Long id, User user);
+    public Boolean isPreviouslyOrdered(Long id, User user, OrderStatus orderStatus);
 
     public String placeSingleItemOrder(PlaceSingleOrderDto placeSingleOrderDto, User user) throws GenericException;
 

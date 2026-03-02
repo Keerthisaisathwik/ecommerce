@@ -95,7 +95,7 @@ public class OrderServiceImpl implements OrderService {
         String paymentToken = UUID.randomUUID().toString().replace("-", "").substring(0,9);
         Order order = Order.builder()
                 .user(user)
-                .orderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8))
+                .orderNumber("ORD_" + UUID.randomUUID().toString().substring(0, 8))
                 .status(OrderStatus.PAYMENT_PENDING)
                 .paymentMethod(placeOrderDto.getPaymentMethod())
                 .paymentTransactionId("")
@@ -155,8 +155,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Boolean isPreviouslyOrdered(Long id, User user) {
-        return orderItemRepository.existsByProductVariantIdAndUser(id, user);
+    public Boolean isPreviouslyOrdered(Long id, User user, OrderStatus orderStatus) {
+        return orderItemRepository.existsByProductVariantIdAndUserAndOrder_Status(id, user, orderStatus);
     }
 
     @Transactional

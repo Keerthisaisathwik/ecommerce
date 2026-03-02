@@ -6,6 +6,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,6 +22,9 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Long version;
+
     @Enumerated(EnumType.STRING)
     private CategoryType category;
 
@@ -34,9 +38,11 @@ public class Product {
     private String brand;
 
     @Builder.Default
-    private Double averageRating = 0.0;
+    @Column(nullable=false)
+    private Integer totalRatingSum = 0;
 
     @Builder.Default
+    @Column(nullable=false)
     private Integer totalReviews = 0;
 
     @CreationTimestamp
@@ -48,11 +54,4 @@ public class Product {
     @OneToMany(mappedBy = "product")
     @OrderBy("isAvailable DESC")
     private List<ProductVariant> productVariants;
-
-    // Automatically set dates before persisting/updating
-    @PrePersist
-    public void prePersist() {
-        if (averageRating == null) this.averageRating = 0.0;
-        if (totalReviews == null) this.totalReviews = 0;
-    }
 }

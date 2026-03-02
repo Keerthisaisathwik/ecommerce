@@ -3,13 +3,11 @@ package com.project.ecommerce.controller;
 import com.project.ecommerce.dto.*;
 import com.project.ecommerce.entity.*;
 import com.project.ecommerce.enums.CategoryType;
+import com.project.ecommerce.enums.OrderStatus;
 import com.project.ecommerce.exception.GenericException;
 import com.project.ecommerce.repository.ProductRepository;
 import com.project.ecommerce.repository.ProductVariantRepository;
-import com.project.ecommerce.service.CartService;
-import com.project.ecommerce.service.OrderService;
-import com.project.ecommerce.service.UserService;
-import com.project.ecommerce.service.WishlistService;
+import com.project.ecommerce.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -42,6 +40,8 @@ public class StoreController {
     private final WishlistService wishlistService;
 
     private final OrderService orderService;
+
+    private final ReviewService reviewService;
 
     @GetMapping("/product/{variant_asin}")
     public ResponseEntity<APISuccessResponse<ProductDto>> getProductByVariantId(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader, @PathVariable("variant_asin") String variantAsin) throws GenericException {
@@ -84,13 +84,13 @@ public class StoreController {
                 .brand(product.getBrand())
                 .price(productVariant.getPrice())
                 .imageUrls(productVariant.getImageUrls())
-                .averageRating(product.getAverageRating())
+                .averageRating((double)product.getTotalRatingSum()/ product.getTotalReviews())
                 .totalReviews(product.getTotalReviews())
                 .createdAt(productVariant.getCreatedAt())
                 .updatedAt(productVariant.getUpdatedAt())
                 .productVariants(list)
                 .stockQuantity(productVariant.getStockQuantity())
-                .isPreviouslyOrdered(orderService.isPreviouslyOrdered(productVariant.getId(), user))
+                .isPreviouslyOrdered(orderService.isPreviouslyOrdered(productVariant.getId(), user, OrderStatus.DELIVERED))
                 .cartQuantity(user == null ? 0 : cartService.findSpecificCartItemQuantity(user.getId(), productVariant.getId()))
                 .isWishlisted(user != null && wishlistService.existsByUserAndProductVariant(user, productVariant))
                 .build();
@@ -117,7 +117,7 @@ public class StoreController {
                     .variantAsin(defaultVariant.getVariantAsin())
                     .imageUrl(defaultVariant.getImageUrls().getFirst())
                     .title(product.getName())
-                    .rating(product.getAverageRating())
+                    .rating((double)product.getTotalRatingSum()/ product.getTotalReviews())
                     .price(defaultVariant.getPrice())
                     .build();
         }).collect(Collectors.toList());
@@ -134,7 +134,7 @@ public class StoreController {
                     .variantAsin(defaultVariant.getVariantAsin())
                     .imageUrl(defaultVariant.getImageUrls().getFirst())
                     .title(product.getName())
-                    .rating(product.getAverageRating())
+                    .rating((double)product.getTotalRatingSum()/ product.getTotalReviews())
                     .price(defaultVariant.getPrice())
                     .build();
         }).collect(Collectors.toList());
@@ -144,5 +144,28 @@ public class StoreController {
     @GetMapping("/sentry-test")
     public String test() {
         throw new RuntimeException("Sentry test error");
+    }
+
+    @GetMapping("/review/{variant_asin}")
+    public ResponseEntity<APISuccessResponse<Page<ProductReviewDto>>> getAllReviewsOfProduct(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("variant_asin") String variantAsin, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) throws GenericException{
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ProductReviewDto> reviews = reviewService.getAllReviewsBasedOnVariantAsin(variantAsin, pageable).map(review -> {
+                    if(review==null){
+                        return null;
+                    }
+                    return ProductReviewDto.builder()
+                        .name(review.getUser().getUserDetails().getFirstName() + " "+ review.getUser().getUserDetails().getLastName())
+                        .rating(review.getRating())
+                        .reviewMessage(review.getComment())
+                        .imageUrls(review.getImageUrls())
+                        .variantAttributeList(review.getProductVariant().getAttributes().stream().map(variantAttribute -> VariantAttributeDto.builder()
+                                        .attributeName(variantAttribute.getAttributeName())
+                                        .attributeValue(variantAttribute.getAttributeValue())
+                                        .build())
+                                        .toList())
+                        .updatedAt(review.getUpdatedAt())
+                        .build();
+                });
+        return new ResponseEntity<>(APISuccessResponse.<Page<ProductReviewDto>>builder().data(reviews).build(), HttpStatus.OK);
     }
 }

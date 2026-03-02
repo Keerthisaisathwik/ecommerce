@@ -38,6 +38,8 @@ public class UserController {
 
     private final InvoiceService invoiceService;
 
+    private final ReviewService reviewService;
+
     @GetMapping("/cart")
     public ResponseEntity<APISuccessResponse<ResponseGetCartItemsDto>> getCartItems(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException{
         String token = authorizationHeader.substring(7);
@@ -159,10 +161,10 @@ public class UserController {
     }
 
     @GetMapping("/order/{order_id}")
-    public ResponseEntity<APISuccessResponse<ResponseOrderDto>> getOrderDetailById(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("order_id") Long id) throws GenericException{
+    public ResponseEntity<APISuccessResponse<ResponseOrderDto>> getOrderDetailByOrderNumber(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("order_id") String id) throws GenericException{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
-        Order order = orderService.getOrderById(user, id);
+        Order order = orderService.getOrderByOrderNumber(user, id);
         if (order == null){
             throw new GenericException("Invalid order id");
         } else if(user != null && user.getId() != order.getUser().getId()){
@@ -296,6 +298,61 @@ public class UserController {
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
         cartService.addToCartAndSaveForLater(user, addToCartAndSaveForLaterDto);
+        return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
+    }
+
+    @GetMapping("/review/{variant_asin}")
+    public ResponseEntity<APISuccessResponse<ProductReviewDto>> getReviewDetailsIfPresent(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("variant_asin") String variantAsin) throws GenericException{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        Review review = reviewService.getReview(variantAsin, user);
+        ProductReviewDto productReviewDto = new ProductReviewDto();
+        if(review == null){
+            productReviewDto = null;
+        }else{
+            productReviewDto = ProductReviewDto.builder()
+                    .name(user.getUserDetails().getFirstName()+" "+user.getUserDetails().getLastName())
+                    .rating(review.getRating())
+                    .reviewMessage(review.getComment())
+                    .imageUrls(review.getImageUrls())
+                    .variantAttributeList(review.getProductVariant().getAttributes().stream().map(variantAttribute -> VariantAttributeDto.builder()
+                                    .attributeName(variantAttribute.getAttributeName())
+                                    .attributeValue(variantAttribute.getAttributeValue())
+                                    .build())
+                            .toList())
+                    .updatedAt(review.getUpdatedAt())
+                    .build();
+        }
+        return new ResponseEntity<>(APISuccessResponse.<ProductReviewDto>builder().data(productReviewDto).build(), HttpStatus.OK);
+    }
+
+
+    @PostMapping("/review")
+    public ResponseEntity<APISuccessResponse<ProductReviewDto>> addOrUpdateReview(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestBody UpdateReviewDto updateReviewDto) throws GenericException{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        Review review = reviewService.updateReview(updateReviewDto, user);
+        ProductReviewDto productReviewDto = ProductReviewDto.builder()
+                .name(user.getUserDetails().getFirstName()+" "+user.getUserDetails().getLastName())
+                .rating(review.getRating())
+                .reviewMessage(review.getComment())
+                .imageUrls(review.getImageUrls())
+                .variantAttributeList(review.getProductVariant().getAttributes().stream().map(variantAttribute -> VariantAttributeDto.builder()
+                                .attributeName(variantAttribute.getAttributeName())
+                                .attributeValue(variantAttribute.getAttributeValue())
+                                .build())
+                                .toList())
+                .updatedAt(review.getUpdatedAt())
+                .build();
+        return new ResponseEntity<>(APISuccessResponse.<ProductReviewDto>builder().data(productReviewDto).build(),
+                HttpStatus.OK);
+    }
+
+    @DeleteMapping("/review/{variant_asin}")
+    public ResponseEntity<APISuccessResponse<?>> deleteReview(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("variant_asin") String variantAsin) throws GenericException{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        reviewService.deleteReview(variantAsin, user);
         return new ResponseEntity<>(APISuccessResponse.builder().data(null).build(), HttpStatus.OK);
     }
 }
