@@ -45,7 +45,7 @@ public class OrderItem {
     private String productName;
 
     @Column(nullable = false)
-    private BigDecimal price;
+    private BigDecimal pricePerUnit;
 
     @Column(nullable = false)
     private BigDecimal unitPriceWithoutTax;

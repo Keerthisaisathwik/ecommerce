@@ -136,7 +136,7 @@ public class OrderServiceImpl implements OrderService {
                     .user(user)
                     .productVariantId(variant.getId())
                     .productName(variant.getProduct().getName() + "-"+ variant.getFormattedAttributesKey())
-                    .price(totalPricePerUnit)
+                    .pricePerUnit(totalPricePerUnit)
                     .unitPriceWithoutTax(basePricePerUnit)
                     .taxPerUnit(taxPerUnit)
                     .taxRate(taxRate)
@@ -203,7 +203,7 @@ public class OrderServiceImpl implements OrderService {
                 .user(user)
                 .productVariantId(productVariant.getId())
                 .productName(productVariant.getProduct().getName() + "-" + productVariant.getFormattedAttributesKey())
-                .price(productVariant.getDiscountedPrice())
+                .pricePerUnit(productVariant.getDiscountedPrice())
                 .unitPriceWithoutTax(basePricePerUnit)
                 .taxPerUnit(taxPerUnit)
                 .taxRate(productVariant.getTaxPercentage())
@@ -262,5 +262,10 @@ public class OrderServiceImpl implements OrderService {
             throw new GenericException("You dont have permission to access users data");
         }
         return order;
+    }
+
+    @Override
+    public List<OrderItem> getOrderItemsOfOrder(Order order){
+        return orderItemRepository.findByOrder(order);
     }
 }

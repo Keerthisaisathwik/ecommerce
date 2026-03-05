@@ -5,8 +5,6 @@ import com.project.ecommerce.entity.*;
 import com.project.ecommerce.enums.CategoryType;
 import com.project.ecommerce.enums.OrderStatus;
 import com.project.ecommerce.exception.GenericException;
-import com.project.ecommerce.repository.ProductRepository;
-import com.project.ecommerce.repository.ProductVariantRepository;
 import com.project.ecommerce.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,9 +27,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StoreController {
 
-    private final ProductRepository productRepository;
+    private final ProductService productService;
 
-    private final ProductVariantRepository productVariantRepository;
+    private final ProductVariantService productVariantService;
 
     private final UserService userService;
 
@@ -52,7 +50,7 @@ public class StoreController {
                 user = userService.findUserByToken(token);
             }
         }
-        ProductVariant productVariant = productVariantRepository.findByVariantAsin(variantAsin).orElse(null);
+        ProductVariant productVariant = productVariantService.findByVariantAsin(variantAsin);
         if(productVariant == null)
             throw new GenericException("Given productVariant Id is not correct or does not exist");
         Product product = productVariant.getProduct();
@@ -108,7 +106,7 @@ public class StoreController {
     @GetMapping("/category/{category_type}")
     public ResponseEntity<APISuccessResponse<?>> getProductsByCategory(@PathVariable("category_type") CategoryType category, @RequestParam(defaultValue = "0") Integer page, @RequestParam(defaultValue = "10") Integer size) throws GenericException{
         Pageable pageable = PageRequest.of(page, size);
-        Page<Product> products = productRepository.findByCategory(category, pageable);
+        Page<Product> products = productService.getProductsByCategoryName(category, pageable);
         if(products.isEmpty())
             return new ResponseEntity<>(APISuccessResponse.builder().data(new PageImpl<>(Collections.emptyList(), pageable, products.getTotalElements())).build(), HttpStatus.OK);
         List<GetCategoryProductsDTO> listOfProducts = products.stream().filter(product -> !product.getProductVariants().isEmpty()).map(product -> {
@@ -127,7 +125,7 @@ public class StoreController {
     @GetMapping("/search")
     public ResponseEntity<APISuccessResponse<Page<GetCategoryProductsDTO>>> getProductsByQuery(@RequestParam String query, @RequestParam(defaultValue = "0") Integer page, @RequestParam(defaultValue = "10") Integer size){
         Pageable pageable = PageRequest.of(page, size);
-        Page<Product> products = productRepository.searchProducts(query, pageable);
+        Page<Product> products = productService.searchProductsByQuery(query, pageable);
         List<GetCategoryProductsDTO> listOfProducts = products.stream().map(product -> {
             ProductVariant defaultVariant = product.getProductVariants().getFirst();
             return GetCategoryProductsDTO.builder()

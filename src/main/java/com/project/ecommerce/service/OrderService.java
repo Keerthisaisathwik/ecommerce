@@ -3,6 +3,7 @@ package com.project.ecommerce.service;
 import com.project.ecommerce.dto.PlaceOrderDto;
 import com.project.ecommerce.dto.PlaceSingleOrderDto;
 import com.project.ecommerce.entity.Order;
+import com.project.ecommerce.entity.OrderItem;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.enums.OrderStatus;
 import com.project.ecommerce.exception.GenericException;
@@ -29,4 +30,6 @@ public interface OrderService {
     public int cancelExpiredOrders();
 
     public Order getOrderByOrderNumber(User user, String orderNumber) throws GenericException;
+
+    public List<OrderItem> getOrderItemsOfOrder(Order order);
 }

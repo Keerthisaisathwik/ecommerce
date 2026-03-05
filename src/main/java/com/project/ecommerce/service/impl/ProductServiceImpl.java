@@ -7,6 +7,7 @@ import com.project.ecommerce.dto.VariantAttributeRequestDto;
 import com.project.ecommerce.entity.Product;
 import com.project.ecommerce.entity.ProductVariant;
 import com.project.ecommerce.entity.VariantAttribute;
+import com.project.ecommerce.enums.CategoryType;
 import com.project.ecommerce.exception.GenericException;
 import com.project.ecommerce.repository.ProductRepository;
 import com.project.ecommerce.repository.ProductVariantRepository;
@@ -14,6 +15,8 @@ import com.project.ecommerce.repository.VariantAttributeRepository;
 import com.project.ecommerce.service.ProductService;
 import com.project.ecommerce.utils.Slug;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -101,5 +104,15 @@ public class ProductServiceImpl implements ProductService {
         }
         productVariantRepository.save(productVariant);
         variantAttributeRepository.saveAll(variantAttributesList);
+    }
+
+    @Override
+    public Page<Product> getProductsByCategoryName(CategoryType category, Pageable pageable) {
+        return productRepository.findByCategory(category, pageable);
+    }
+
+    @Override
+    public Page<Product> searchProductsByQuery(String query, Pageable pageable) {
+        return productRepository.searchProducts(query, pageable);
     }
 }

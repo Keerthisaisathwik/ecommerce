@@ -26,8 +26,6 @@ public class UserController {
 
     private final CartService cartService;
 
-    private final ProductService productService;
-
     private final UserDetailsService userDetailsService;
 
     private final WishlistService wishlistService;
@@ -39,6 +37,8 @@ public class UserController {
     private final InvoiceService invoiceService;
 
     private final ReviewService reviewService;
+
+    private final ProductVariantService productVariantService;
 
     @GetMapping("/cart")
     public ResponseEntity<APISuccessResponse<ResponseGetCartItemsDto>> getCartItems(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) throws GenericException{
@@ -161,7 +161,7 @@ public class UserController {
     }
 
     @GetMapping("/order/{order_id}")
-    public ResponseEntity<APISuccessResponse<ResponseOrderDto>> getOrderDetailByOrderNumber(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("order_id") String id) throws GenericException{
+    public ResponseEntity<APISuccessResponse<ResponseOrderDetailsDto>> getOrderDetailByOrderNumber(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("order_id") String id) throws GenericException{
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
         Order order = orderService.getOrderByOrderNumber(user, id);
@@ -170,7 +170,23 @@ public class UserController {
         } else if(user != null && user.getId() != order.getUser().getId()){
             throw new GenericException("You can't access this information");
         }
-        ResponseOrderDto responseOrderDto = ResponseOrderDto.builder()
+        List<OrderItemDto> orderItemDtoList = orderService.getOrderItemsOfOrder(order).stream().map(orderItem -> {
+            try {
+                ProductVariant productVariant = productVariantService.findByVariantId(orderItem.getProductVariantId());
+                return OrderItemDto.builder()
+                        .variantAsin(productVariant.getVariantAsin())
+                        .quantity(orderItem.getQuantity())
+                        .name(productVariant.getProduct().getName())
+                        .description(productVariant.getProduct().getDescription())
+                        .price(orderItem.getPricePerUnit())
+                        .imageUrl(productVariant.getImageUrls().isEmpty() ? "" : productVariant.getImageUrls().getFirst())
+                        .totalAmount(orderItem.getTotalAmount())
+                        .build();
+            } catch (GenericException e) {
+                throw new RuntimeException(e);
+            }
+        }).toList();
+        ResponseOrderDetailsDto responseOrderDetailsDto = ResponseOrderDetailsDto.builder()
                 .id(order.getId())
                 .orderNumber(order.getOrderNumber())
                 .status(order.getStatus())
@@ -187,8 +203,9 @@ public class UserController {
                 .deliveredAt(order.getDeliveredAt())
                 .tax(order.getTax())
                 .totalAmount(order.getTotalAmount())
+                .orderItemsList(orderItemDtoList)
                 .build();
-        return new ResponseEntity<>(APISuccessResponse.<ResponseOrderDto>builder().data(responseOrderDto).build(), HttpStatus.OK);
+        return new ResponseEntity<>(APISuccessResponse.<ResponseOrderDetailsDto>builder().data(responseOrderDetailsDto).build(), HttpStatus.OK);
     }
 
     @PostMapping("/single-order")
