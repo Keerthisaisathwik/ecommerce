@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.RoundingMode;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
@@ -158,6 +159,24 @@ public class UserController {
         User user = userService.findUserByToken(token);
         String paymentToken = orderService.placeOrder(placeOrderDto, user);
         return new ResponseEntity<>(APISuccessResponse.<OrderPlacedResponseDto>builder().data(OrderPlacedResponseDto.builder().paymentToken(paymentToken).build()).build(), HttpStatus.OK);
+    }
+
+    @GetMapping("/order/{order_id}/summary")
+    public ResponseEntity<APISuccessResponse<OrderSummaryDto>> getOrderSummaryByOrderNumber(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("order_id") String id) throws GenericException{
+        String token = authorizationHeader.substring(7);
+        User user = userService.findUserByToken(token);
+        Order order = orderService.getOrderByOrderNumber(user, id);
+        if (order == null){
+            throw new GenericException("Invalid order id");
+        } else if(user != null && user.getId() != order.getUser().getId()){
+            throw new GenericException("You can't access this information");
+        }
+        OrderSummaryDto orderSummaryDto = OrderSummaryDto.builder()
+                .paymentMethod(order.getPaymentMethod())
+                .orderId(order.getOrderNumber())
+                .price(order.getPrice().setScale(2, RoundingMode.HALF_UP))
+                .build();
+        return new ResponseEntity<>(APISuccessResponse.<OrderSummaryDto>builder().data(orderSummaryDto).build(), HttpStatus.OK);
     }
 
     @GetMapping("/order/{order_id}")
