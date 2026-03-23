@@ -7,11 +7,12 @@ import com.project.ecommerce.entity.OrderItem;
 import com.project.ecommerce.entity.User;
 import com.project.ecommerce.enums.OrderStatus;
 import com.project.ecommerce.exception.GenericException;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface OrderService {
-    public List<Order> getAllOrders(User user);
+    public Page<Order> getAllOrders(User user);
 
     public Order getOrderById(User user, Long orderId) throws GenericException;
 

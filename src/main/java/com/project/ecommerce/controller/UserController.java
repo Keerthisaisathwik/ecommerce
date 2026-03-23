@@ -5,6 +5,7 @@ import com.project.ecommerce.entity.*;
 import com.project.ecommerce.exception.GenericException;
 import com.project.ecommerce.service.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -127,11 +128,11 @@ public class UserController {
     }
 
     @GetMapping("/order")
-    public ResponseEntity<APISuccessResponse<List<ResponseOrderDto>>> getAllOrders(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
+    public ResponseEntity<APISuccessResponse<Page<ResponseOrderDto>>> getAllOrders(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
-        List<ResponseOrderDto> responseOrderDtoList = orderService.getAllOrders(user).stream().map(order -> {
-            return ResponseOrderDto.builder()
+        Page<ResponseOrderDto> responseOrderDtoList = orderService.getAllOrders(user).map(order ->
+             ResponseOrderDto.builder()
                     .id(order.getId())
                     .orderNumber(order.getOrderNumber())
                     .status(order.getStatus())
@@ -148,9 +149,9 @@ public class UserController {
                     .deliveredAt(order.getDeliveredAt())
                     .tax(order.getTax())
                     .totalAmount(order.getTotalAmount())
-                    .build();
-        }).toList();
-        return new ResponseEntity<>(APISuccessResponse.<List<ResponseOrderDto>>builder().data(responseOrderDtoList).build(), HttpStatus.OK);
+                    .build()
+        );
+        return new ResponseEntity<>(APISuccessResponse.<Page<ResponseOrderDto>>builder().data(responseOrderDtoList).build(), HttpStatus.OK);
     }
 
     @PostMapping("/order")

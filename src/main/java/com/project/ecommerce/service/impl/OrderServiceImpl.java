@@ -13,6 +13,7 @@ import com.project.ecommerce.service.CartService;
 import com.project.ecommerce.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,8 +49,8 @@ public class OrderServiceImpl implements OrderService {
     private int cancellationMinutes;
 
     @Override
-    public List<Order> getAllOrders(User user) {
-        return orderRepository.findByUser(user).orElse(Collections.emptyList());
+    public Page<Order> getAllOrders(User user) {
+        return orderRepository.findByUser(user);
     }
 
     @Override
