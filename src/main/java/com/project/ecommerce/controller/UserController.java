@@ -6,6 +6,8 @@ import com.project.ecommerce.exception.GenericException;
 import com.project.ecommerce.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -128,10 +130,11 @@ public class UserController {
     }
 
     @GetMapping("/order")
-    public ResponseEntity<APISuccessResponse<Page<ResponseOrderDto>>> getAllOrders(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
+    public ResponseEntity<APISuccessResponse<Page<ResponseOrderDto>>> getAllOrders(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @RequestParam(defaultValue = "0") Integer page, @RequestParam(defaultValue = "10") Integer size){
         String token = authorizationHeader.substring(7);
         User user = userService.findUserByToken(token);
-        Page<ResponseOrderDto> responseOrderDtoList = orderService.getAllOrders(user).map(order ->
+        Pageable pageable = PageRequest.of(page, size);
+        Page<ResponseOrderDto> responseOrderDtoList = orderService.getAllOrders(user, pageable).map(order ->
              ResponseOrderDto.builder()
                     .id(order.getId())
                     .orderNumber(order.getOrderNumber())

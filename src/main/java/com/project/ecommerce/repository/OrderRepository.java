@@ -4,6 +4,7 @@ import com.project.ecommerce.entity.Order;
 import com.project.ecommerce.entity.User;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,7 +17,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     Optional<Order> findById(Long orderId);
 
-    Page<Order> findByUser(User user);
+    Page<Order> findByUser(User user, Pageable pageable);
 
     @Modifying
     @Query("""
