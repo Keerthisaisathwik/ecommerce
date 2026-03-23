@@ -34,4 +34,8 @@ public interface OrderService {
     public Order getOrderByOrderNumber(User user, String orderNumber) throws GenericException;
 
     public List<OrderItem> getOrderItemsOfOrder(Order order);
+
+    public void updateOrderStatusAdmin(Order order) throws GenericException;
+
+    public boolean isValidTransition(OrderStatus current, OrderStatus next);
 }

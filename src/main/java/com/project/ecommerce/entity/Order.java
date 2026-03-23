@@ -94,6 +94,7 @@ public class Order {
 
     private LocalDateTime paidAt;
     private LocalDateTime shippedAt;
+    private LocalDateTime outForDeliveryAt;
     private LocalDateTime deliveredAt;
 
     @PrePersist

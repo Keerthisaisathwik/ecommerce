@@ -31,4 +31,16 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByUserAndPaymentToken(User user, String paymentMethod);
 
     Optional<Order> findByOrderNumber(String orderNumber);
+
+    @Query("""
+            SELECT o FROM Order o 
+            WHERE 
+                (o.status = 'PAID' AND o.paidAt <= :time1)
+             OR (o.status = 'SHIPPED' AND o.shippedAt <= :time2)
+             OR (o.status = 'OUT_FOR_DELIVERY' AND o.outForDeliveryAt <= :time3)
+            """)
+    List<Order> findOrdersReadyForNextStep(@Param("time1") LocalDateTime time1,
+                                           @Param("time2") LocalDateTime time2,
+                                           @Param("time3") LocalDateTime time3
+    );
 }

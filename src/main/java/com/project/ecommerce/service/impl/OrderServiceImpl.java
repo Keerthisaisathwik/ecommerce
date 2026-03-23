@@ -25,6 +25,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import static com.project.ecommerce.enums.OrderStatus.*;
+
 @Service
 public class OrderServiceImpl implements OrderService {
 
@@ -98,7 +100,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = Order.builder()
                 .user(user)
                 .orderNumber("ORD_" + UUID.randomUUID().toString().substring(0, 8))
-                .status(OrderStatus.PAYMENT_PENDING)
+                .status(PAYMENT_PENDING)
                 .paymentMethod(placeOrderDto.getPaymentMethod())
                 .paymentTransactionId("")
                 .paymentStatus(PaymentStatus.PENDING)
@@ -185,7 +187,7 @@ public class OrderServiceImpl implements OrderService {
         Order order = Order.builder()
                 .user(user)
                 .orderNumber("ORD_" + UUID.randomUUID().toString().replace("-","").substring(0, 8))
-                .status(OrderStatus.PAYMENT_PENDING)
+                .status(PAYMENT_PENDING)
                 .paymentMethod(placeSingleOrderDto.getPaymentMethod())
                 .paymentTransactionId("")
                 .paymentStatus(PaymentStatus.PENDING)
@@ -222,12 +224,13 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order payTheOder(User user, String paymentToken) throws GenericException {
         Order order = getPaymentDetails(user, paymentToken);
-        if(order.getPaymentStatus() != PaymentStatus.PENDING || order.getStatus() != OrderStatus.PAYMENT_PENDING){
+        if(order.getPaymentStatus() != PaymentStatus.PENDING || order.getStatus() != PAYMENT_PENDING){
             throw new GenericException("Invalid order state");
         }
         order.setPaymentStatus(PaymentStatus.SUCCESS);
         order.setPaymentTransactionId("TXN-" + UUID.randomUUID().toString().substring(0, 10));
         order.setStatus(OrderStatus.PAID);
+        order.setPaidAt(LocalDateTime.now());
         orderRepository.save(order);
         return order;
     }
@@ -235,7 +238,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void cancelTheOrder(User user, String paymentToken) throws GenericException {
         Order order = getPaymentDetails(user, paymentToken);
-        if(order.getPaymentStatus() != PaymentStatus.PENDING || order.getStatus() != OrderStatus.PAYMENT_PENDING){
+        if(order.getPaymentStatus() != PaymentStatus.PENDING || order.getStatus() != PAYMENT_PENDING){
             throw new GenericException("Invalid order state");
         }
         order.setPaymentStatus(PaymentStatus.FAILED);
@@ -269,5 +272,36 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderItem> getOrderItemsOfOrder(Order order){
         return orderItemRepository.findByOrder(order);
+    }
+
+    @Override
+    public void updateOrderStatusAdmin(Order order) throws GenericException {
+        //Will write this method in the future.
+    }
+
+    @Override
+    public boolean isValidTransition(OrderStatus current, OrderStatus next) {
+        switch (current) {
+            case CREATED:
+                return next == PAYMENT_PENDING || next == CANCELLED;
+
+            case PAYMENT_PENDING:
+                return next == PAID || next == CANCELLED;
+
+            case PAID:
+                return next == SHIPPED || next == CANCELLED;
+
+            case SHIPPED:
+                return next == OUT_FOR_DELIVERY;
+
+            case OUT_FOR_DELIVERY:
+                return next == DELIVERED;
+
+            case DELIVERED:
+                return next == RETURNED;
+
+            default:
+                return false;
+        }
     }
 }
