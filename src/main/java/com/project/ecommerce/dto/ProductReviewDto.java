@@ -18,6 +18,8 @@ public class ProductReviewDto {
 
     private int rating;
 
+    private String reviewTitle;
+
     private String reviewMessage;
 
     private List<String> imageUrls;

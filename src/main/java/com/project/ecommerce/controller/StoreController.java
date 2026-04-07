@@ -4,6 +4,7 @@ import com.project.ecommerce.dto.*;
 import com.project.ecommerce.entity.*;
 import com.project.ecommerce.enums.CategoryType;
 import com.project.ecommerce.enums.OrderStatus;
+import com.project.ecommerce.enums.ReviewFilter;
 import com.project.ecommerce.exception.GenericException;
 import com.project.ecommerce.service.*;
 import lombok.RequiredArgsConstructor;
@@ -145,15 +146,19 @@ public class StoreController {
     }
 
     @GetMapping("/review/{variant_asin}")
-    public ResponseEntity<APISuccessResponse<Page<ProductReviewDto>>> getAllReviewsOfProduct(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader, @PathVariable("variant_asin") String variantAsin, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) throws GenericException{
+    public ResponseEntity<APISuccessResponse<Page<ProductReviewDto>>> getAllReviewsOfProduct(@PathVariable("variant_asin") String variantAsin, @RequestParam(defaultValue = "ALL_REVIEWS") ReviewFilter filter, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) throws GenericException{
         Pageable pageable = PageRequest.of(page, size);
-        Page<ProductReviewDto> reviews = reviewService.getAllReviewsBasedOnVariantAsin(variantAsin, pageable).map(review -> {
+        Page<Review> allReviews = (filter == ReviewFilter.REVIEWS_WITH_IMAGES) ?
+                reviewService.getReviewsWithImages(productVariantService.findByVariantAsin(variantAsin).getProduct().getId(), page, size) :
+                reviewService.getAllReviewsBasedOnVariantAsin(variantAsin, pageable);
+        Page<ProductReviewDto> reviews = allReviews.map(review -> {
                     if(review==null){
                         return null;
                     }
                     return ProductReviewDto.builder()
                         .name(review.getUser().getUserDetails().getFirstName() + " "+ review.getUser().getUserDetails().getLastName())
                         .rating(review.getRating())
+                        .reviewTitle(review.getTitle())
                         .reviewMessage(review.getComment())
                         .imageUrls(review.getImageUrls())
                         .variantAttributeList(review.getProductVariant().getAttributes().stream().map(variantAttribute -> VariantAttributeDto.builder()
@@ -165,5 +170,39 @@ public class StoreController {
                         .build();
                 });
         return new ResponseEntity<>(APISuccessResponse.<Page<ProductReviewDto>>builder().data(reviews).build(), HttpStatus.OK);
+    }
+
+    @GetMapping("/review/images/{variant_asin}")
+    public ResponseEntity<APISuccessResponse<Page<ReviewImageDto>>> getAllReviewImagesOfTheProduct(@PathVariable("variant_asin") String variantAsin, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) throws GenericException{
+        Long productId = productVariantService.findByVariantAsin(variantAsin).getProduct().getId();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Review> reviews = reviewService.getReviewsWithImages(productId, page, size);
+        List<ReviewImageDto> reviewImages = reviews.getContent().stream()
+                .filter(r -> r.getImageUrls() != null)
+                .flatMap(r -> r.getImageUrls().stream()
+                        .map(img -> new ReviewImageDto(r.getId(), img)))
+                .toList();
+        Page<ReviewImageDto> reviewImagesDtoPage = new PageImpl<>(reviewImages, pageable, reviews.getTotalElements());
+        return new ResponseEntity<>(APISuccessResponse.<Page<ReviewImageDto>>builder().data(reviewImagesDtoPage).build(), HttpStatus.OK);
+    }
+
+    @GetMapping("/review/id/{review_id}")
+    public ResponseEntity<APISuccessResponse<ProductReviewDto>> getReviewById(@PathVariable(
+            "review_id") Long reviewId) throws GenericException{
+        Review review = reviewService.getReviewById(reviewId);
+        ProductReviewDto productReviewDto = ProductReviewDto.builder()
+                .name(review.getUser().getUserDetails().getFirstName() + " "+ review.getUser().getUserDetails().getLastName())
+                .rating(review.getRating())
+                .reviewTitle(review.getTitle())
+                .reviewMessage(review.getComment())
+                .imageUrls(review.getImageUrls())
+                .variantAttributeList(review.getProductVariant().getAttributes().stream().map(variantAttribute -> VariantAttributeDto.builder()
+                                .attributeName(variantAttribute.getAttributeName())
+                                .attributeValue(variantAttribute.getAttributeValue())
+                                .build())
+                        .toList())
+                .updatedAt(review.getUpdatedAt())
+                .build();
+        return new ResponseEntity<>(APISuccessResponse.<ProductReviewDto>builder().data(productReviewDto).build(), HttpStatus.OK);
     }
 }

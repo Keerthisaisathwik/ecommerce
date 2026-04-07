@@ -44,6 +44,9 @@ public class Review {
     @JoinColumn(name = "product_variant_id")
     private ProductVariant productVariant;
 
+    @Column(length = 60)
+    private String title;
+
     @Column(nullable=false)
     @Min(1)
     @Max(5)

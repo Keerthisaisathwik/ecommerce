@@ -20,4 +20,8 @@ public interface ReviewService {
     void deleteReview(String variantAsin, User user) throws GenericException;
 
     Page<Review> getAllReviewsBasedOnVariantAsin(String variantAsin, Pageable pageable) throws GenericException;
+
+    Page<Review> getReviewsWithImages(Long productId, int page, int size) throws GenericException;
+
+    Review getReviewById(Long id) throws GenericException;
 }

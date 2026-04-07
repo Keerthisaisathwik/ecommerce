@@ -17,6 +17,8 @@ public class UpdateReviewDto {
 
     private String variantAsin;
 
+    private String reviewTitle;
+
     private String reviewMessage;
 
     private List<String> imageUrls;

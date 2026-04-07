@@ -14,7 +14,9 @@ import com.project.ecommerce.service.OrderService;
 import com.project.ecommerce.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,6 +70,7 @@ public class ReviewServiceImpl implements ReviewService {
         if(review == null){
             return addReview(updateReviewDto, user);
         }
+        review.setTitle(updateReviewDto.getReviewTitle());
         review.setComment(updateReviewDto.getReviewMessage());
         review.setRating(updateReviewDto.getRating());
         review.setImageUrls(updateReviewDto.getImageUrls());
@@ -98,5 +101,16 @@ public class ReviewServiceImpl implements ReviewService {
     public Page<Review> getAllReviewsBasedOnVariantAsin(String variantAsin, Pageable pageable) throws GenericException {
         ProductVariant productVariant = productVariantRepository.findByVariantAsin(variantAsin).orElseThrow(() -> new GenericException("Invalid variantAsin"));
         return reviewRepository.findByProductVariant_Product_Id(productVariant.getProduct().getId(), pageable);
+    }
+
+    @Override
+    public Page<Review> getReviewsWithImages(Long productId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return reviewRepository.findReviewsWithImagesByProductId(productId, pageable);
+    }
+
+    @Override
+    public Review getReviewById(Long id) throws GenericException {
+        return reviewRepository.findById(id).orElseThrow(() -> new GenericException("Invalid reviewId: "+ id));
     }
 }
