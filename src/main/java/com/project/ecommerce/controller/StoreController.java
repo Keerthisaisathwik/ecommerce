@@ -146,11 +146,8 @@ public class StoreController {
     }
 
     @GetMapping("/review/{variant_asin}")
-    public ResponseEntity<APISuccessResponse<Page<ProductReviewDto>>> getAllReviewsOfProduct(@PathVariable("variant_asin") String variantAsin, @RequestParam(defaultValue = "ALL_REVIEWS") ReviewFilter filter, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) throws GenericException{
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Review> allReviews = (filter == ReviewFilter.REVIEWS_WITH_IMAGES) ?
-                reviewService.getReviewsWithImages(productVariantService.findByVariantAsin(variantAsin).getProduct().getId(), page, size) :
-                reviewService.getAllReviewsBasedOnVariantAsin(variantAsin, pageable);
+    public ResponseEntity<APISuccessResponse<Page<ProductReviewDto>>> getAllReviewsOfProduct(@PathVariable("variant_asin") String variantAsin, @RequestParam(defaultValue = "ALL_REVIEWS") ReviewFilter filter, @RequestParam(required = false) Integer rating, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) throws GenericException{
+        Page<Review> allReviews = reviewService.getReviewsWithFilter(productVariantService.findByVariantAsin(variantAsin).getProduct().getId(), rating, filter == ReviewFilter.REVIEWS_WITH_IMAGES, page, size);
         Page<ProductReviewDto> reviews = allReviews.map(review -> {
                     if(review==null){
                         return null;
@@ -173,10 +170,10 @@ public class StoreController {
     }
 
     @GetMapping("/review/images/{variant_asin}")
-    public ResponseEntity<APISuccessResponse<Page<ReviewImageDto>>> getAllReviewImagesOfTheProduct(@PathVariable("variant_asin") String variantAsin, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) throws GenericException{
+    public ResponseEntity<APISuccessResponse<Page<ReviewImageDto>>> getImagesFromReviewsByProductId(@PathVariable("variant_asin") String variantAsin, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) throws GenericException{
         Long productId = productVariantService.findByVariantAsin(variantAsin).getProduct().getId();
         Pageable pageable = PageRequest.of(page, size);
-        Page<Review> reviews = reviewService.getReviewsWithImages(productId, page, size);
+        Page<Review> reviews = reviewService.getReviewsWithFilter(productId, null, true, page, size);
         List<ReviewImageDto> reviewImages = reviews.getContent().stream()
                 .filter(r -> r.getImageUrls() != null)
                 .flatMap(r -> r.getImageUrls().stream()
@@ -204,5 +201,12 @@ public class StoreController {
                 .updatedAt(review.getUpdatedAt())
                 .build();
         return new ResponseEntity<>(APISuccessResponse.<ProductReviewDto>builder().data(productReviewDto).build(), HttpStatus.OK);
+    }
+
+    @GetMapping("/review/count/{variant_asin}")
+    public ResponseEntity<APISuccessResponse<List<RatingCountDto>>> getRatingCountsBasedOnProduct(@PathVariable("variant_asin") String variantAsin) throws GenericException{
+        Long productId = productVariantService.findByVariantAsin(variantAsin).getProduct().getId();
+        List<RatingCountDto> ratingCountDto= reviewService.getRatingCountsByProductId(productId);
+        return new ResponseEntity<>(APISuccessResponse.<List<RatingCountDto>>builder().data(ratingCountDto).build(), HttpStatus.OK);
     }
 }

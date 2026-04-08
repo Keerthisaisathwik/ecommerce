@@ -134,7 +134,6 @@ public class OrderServiceImpl implements OrderService {
             BigDecimal basePricePerUnit = totalPricePerUnit.divide(divisor, 6, RoundingMode.HALF_UP).setScale(2, RoundingMode.HALF_UP);
             BigDecimal taxPerUnit = totalPricePerUnit.subtract(basePricePerUnit).setScale(2, RoundingMode.HALF_UP);
 
-            System.out.println("** "+basePricePerUnit + " - "+basePricePerUnit.multiply(BigDecimal.valueOf(quantity))+" - "+basePricePerUnit.multiply(BigDecimal.valueOf(quantity)).setScale(2, RoundingMode.HALF_UP));
             OrderItem orderItem = OrderItem.builder()
                     .order(order)
                     .user(user)

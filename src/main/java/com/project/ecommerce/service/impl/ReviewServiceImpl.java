@@ -1,5 +1,6 @@
 package com.project.ecommerce.service.impl;
 
+import com.project.ecommerce.dto.RatingCountDto;
 import com.project.ecommerce.dto.UpdateReviewDto;
 import com.project.ecommerce.entity.Product;
 import com.project.ecommerce.entity.ProductVariant;
@@ -19,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -98,19 +101,21 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Page<Review> getAllReviewsBasedOnVariantAsin(String variantAsin, Pageable pageable) throws GenericException {
-        ProductVariant productVariant = productVariantRepository.findByVariantAsin(variantAsin).orElseThrow(() -> new GenericException("Invalid variantAsin"));
-        return reviewRepository.findByProductVariant_Product_Id(productVariant.getProduct().getId(), pageable);
-    }
-
-    @Override
-    public Page<Review> getReviewsWithImages(Long productId, int page, int size) {
+    public Page<Review> getReviewsWithFilter(Long productId, Integer rating, Boolean hasImages, int page, int size) throws GenericException{
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return reviewRepository.findReviewsWithImagesByProductId(productId, pageable);
+        if(rating != null && (rating < 1 || rating > 5)){
+            throw new GenericException("Rating must be between 1 to 5 but given rating is : "+ rating);
+        }
+        return reviewRepository.findReviewsWithFilters(productId, rating, hasImages, pageable);
     }
 
     @Override
     public Review getReviewById(Long id) throws GenericException {
         return reviewRepository.findById(id).orElseThrow(() -> new GenericException("Invalid reviewId: "+ id));
+    }
+
+    @Override
+    public List<RatingCountDto> getRatingCountsByProductId(Long productId) {
+        return reviewRepository.getRatingCountsByProductId(productId);
     }
 }

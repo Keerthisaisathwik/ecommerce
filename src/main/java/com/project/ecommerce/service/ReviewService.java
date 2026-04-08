@@ -1,5 +1,6 @@
 package com.project.ecommerce.service;
 
+import com.project.ecommerce.dto.RatingCountDto;
 import com.project.ecommerce.dto.UpdateReviewDto;
 import com.project.ecommerce.entity.Review;
 import com.project.ecommerce.entity.User;
@@ -19,9 +20,9 @@ public interface ReviewService {
 
     void deleteReview(String variantAsin, User user) throws GenericException;
 
-    Page<Review> getAllReviewsBasedOnVariantAsin(String variantAsin, Pageable pageable) throws GenericException;
-
-    Page<Review> getReviewsWithImages(Long productId, int page, int size) throws GenericException;
+    Page<Review> getReviewsWithFilter(Long productId, Integer rating, Boolean hasImages, int page, int size) throws GenericException;
 
     Review getReviewById(Long id) throws GenericException;
+
+    List<RatingCountDto> getRatingCountsByProductId(Long productId);
 }
