@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,9 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final AuthService authService;
 
     private final ObjectMapper objectMapper;
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -44,7 +48,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String authCode = authService.storeLoginResponse(loginResponse.getBody());
 
         // Step 3: redirect frontend with auth code as query param
-        String redirectUrl = "http://localhost:3000/auth/login?authcode=" + authCode;
+        String redirectUrl = frontendUrl + "/auth/login?authcode=" + authCode;
         response.setStatus(HttpServletResponse.SC_FOUND);
         response.sendRedirect(redirectUrl);
 

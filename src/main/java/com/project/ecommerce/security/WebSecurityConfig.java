@@ -2,6 +2,7 @@ package com.project.ecommerce.security;
 
 import lombok.RequiredArgsConstructor;
 import org.hibernate.StatelessSession;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -19,6 +20,9 @@ import java.util.List;
 @Configuration
 @RequiredArgsConstructor
 public class WebSecurityConfig {
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     private final JwtAuthFilter jwtAuthFilter;
     private final OAuth2FailureHandler oAuth2FailureHandler;
@@ -51,8 +55,7 @@ public class WebSecurityConfig {
 
         // Replace ngrok URL with your current one
         configuration.setAllowedOrigins(List.of(
-                "https://458d9d3894ad.ngrok-free.app",
-                "http://localhost:3000"
+                frontendUrl
         ));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

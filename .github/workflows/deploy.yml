@@ -1,0 +1,40 @@
+name: Deploy to AWS EC2 Dev
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          server-id: github
+
+      - name: Set version variable
+        id: set_version
+        run: echo "VERSION=v$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+
+      - name: Print Working Directory
+        run: pwd
+
+      - name: Build JAR
+        run: mvn clean package -DskipTests
+
+      - name: Build Docker image
+        run: docker build -t dfhbackendapp:latest -f dev.Dockerfile .
+
+      - name: Login to DockerHub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Push image
+        run: docker push your-dockerhub-username/ecommerce-app
